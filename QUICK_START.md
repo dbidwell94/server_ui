@@ -35,6 +35,38 @@ The server will start at http://0.0.0.0:8000
 
 ## Development Mode
 
+For local development with hot reload:
+
+**Option 1: Recommended (Full Hot Reload)**
+
+```bash
+# Terminal 1: Start the backend API server
+cargo run --features local-dev
+
+# Terminal 2: Start the frontend dev server
+cd frontend
+npm run dev
+```
+
+Then open http://localhost:5173 in your browser. This provides:
+- Hot module replacement for instant frontend updates
+- API proxy to the backend running on port 8000
+- No need to rebuild after frontend changes
+
+**Option 2: Production-like Development**
+
+For backend development:
+
+```bash
+# Build the frontend once
+cd frontend
+npm run build
+cd ..
+
+# Run the backend
+cargo run
+```
+
 For frontend development with hot reload:
 
 ```bash
@@ -43,12 +75,6 @@ npm run dev
 ```
 
 The dev server will run at http://localhost:5173
-
-For backend development:
-
-```bash
-cargo run
-```
 
 Note: Build the frontend first so the `static/` directory exists.
 

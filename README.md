@@ -57,26 +57,44 @@ The server will start at `http://127.0.0.1:8000`
 
 ## Development
 
-### Frontend Development
+### Local Development (Recommended)
 
-For frontend development with hot module replacement:
+For the best development experience, run the frontend and backend separately:
 
-```bash
-cd frontend
-npm run dev
-```
+1. **Start the backend in local-dev mode:**
+   ```bash
+   cargo run --features local-dev
+   ```
+   This runs the backend API on `http://localhost:8000` without serving static files.
 
-This starts a development server at `http://localhost:5173`
+2. **Start the frontend dev server:**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   This starts Vite's dev server on `http://localhost:5173` with hot module replacement.
 
-### Backend Development
+3. **Access the application:**
+   Open `http://localhost:5173` in your browser. API calls to `/api/*` will be automatically proxied to the backend.
 
-To run the backend in development mode:
+### Alternative: Production-like Development
 
-```bash
-cargo run
-```
+To test the production build locally:
 
-Note: Make sure to build the frontend first so the `static/` directory exists.
+1. **Build the frontend:**
+   ```bash
+   cd frontend
+   npm run build
+   cd ..
+   ```
+
+2. **Run the backend (without local-dev feature):**
+   ```bash
+   cargo run
+   ```
+
+3. **Access the application:**
+   Open `http://localhost:8000` in your browser.
 
 ## Architecture
 

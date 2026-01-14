@@ -95,10 +95,53 @@ Rocket Server
 3. **Response Time**: Direct memory access for static files
 4. **Build Time**: ~1-2 minutes for full build from scratch
 
+## Development Features
+
+### Local Development Mode
+
+The application supports a `local-dev` feature flag that changes how the backend operates:
+
+**Without `local-dev` feature (Production Mode):**
+- Static files are embedded and served from the Rust binary
+- All routes (except `/api/*`) serve static assets or fallback to `index.html`
+- Single binary deployment
+
+**With `local-dev` feature (Development Mode):**
+- Static file serving is disabled
+- Backend only provides API endpoints
+- Frontend is served by Vite dev server (port 5173) with hot module replacement
+- API calls are proxied from Vite to the backend (port 8000)
+
+### Environment Variables
+
+The frontend supports environment-specific configuration via Vite:
+
+- `.env.development` - Used during `npm run dev`
+- `.env.production` - Used during `npm run build`
+- `.env.example` - Template for environment variables
+
+Available variables:
+- `VITE_API_URL` - Backend API base URL (empty in production for same-origin)
+- `VITE_DEV_SERVER_URL` - Vite dev server URL
+
+## Static File Serving Improvements
+
+The static file serving has been simplified:
+
+**Before:**
+- Separate routes for `/assets/*` and `/vite.svg`
+- Explicit handling for specific file types
+- SPA fallback on separate route
+
+**After:**
+- Single catch-all route for all static files
+- Automatic MIME type detection for any file
+- Tries exact file path first, falls back to `index.html`
+- Supports any static file in the root directory (e.g., `vite.svg`, `favicon.ico`)
+
 ## Future Enhancements
 
 Potential improvements for production use:
-- Environment-based configuration
 - Database integration
 - Authentication/Authorization
 - WebSocket support for real-time features
