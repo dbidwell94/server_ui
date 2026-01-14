@@ -90,8 +90,9 @@ fn dev_mode_fallback(_path: std::path::PathBuf) -> Json<serde_json::Value> {
     }))
 }
 
+#[allow(clippy::result_large_err)]
 #[rocket::main]
-async fn main() -> Result<(), Box<rocket::Error>> {
+async fn main() -> Result<(), rocket::Error> {
     let rocket = rocket::build();
 
     #[cfg(not(feature = "local-dev"))]
@@ -100,7 +101,7 @@ async fn main() -> Result<(), Box<rocket::Error>> {
     #[cfg(feature = "local-dev")]
     let rocket = rocket.mount("/", routes![api_health, dev_mode_fallback]);
 
-    rocket.launch().await.map_err(Box::new)?;
+    rocket.launch().await?;
 
     Ok(())
 }
