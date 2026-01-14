@@ -1,62 +1,9 @@
-import { useEffect, useState } from "react";
 import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/solid";
-import { statusClasses, textClasses } from "../theme";
-
-interface HealthStatus {
-  status: "healthy" | "unhealthy" | "loading" | "error";
-  message: string;
-  errors: string[];
-  lastUpdated: Date | null;
-}
+import { useHealth } from "../hooks/useHealth";
+import { statusClasses } from "../theme";
 
 export default function HealthStatus() {
-  const [health, setHealth] = useState<HealthStatus>({
-    status: "loading",
-    message: "Checking...",
-    errors: [],
-    lastUpdated: null,
-  });
-
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const response = await fetch("/api/health");
-        if (response.ok) {
-          const data = await response.json();
-          const isHealthy = data.status === "healthy";
-          
-          setHealth({
-            status: isHealthy ? "healthy" : "unhealthy",
-            message: data.message || (isHealthy ? "All systems operational" : "Some systems have issues"),
-            errors: data.errors || [],
-            lastUpdated: new Date(),
-          });
-        } else {
-          setHealth({
-            status: "unhealthy",
-            message: "Backend connection error",
-            errors: [`HTTP ${response.status}`],
-            lastUpdated: new Date(),
-          });
-        }
-      } catch (error) {
-        setHealth({
-          status: "error",
-          message: "Unable to connect to backend",
-          errors: [error instanceof Error ? error.message : "Unknown error"],
-          lastUpdated: new Date(),
-        });
-      }
-    };
-
-    // Initial check
-    checkHealth();
-
-    // Set up interval to check every 10 seconds
-    const interval = setInterval(checkHealth, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const health = useHealth();
 
   const getStatusVariant = (): keyof typeof statusClasses => {
     if (health.status === "loading" || health.status === "error") {
@@ -64,23 +11,6 @@ export default function HealthStatus() {
     }
     return health.status === "healthy" ? "healthy" : "unhealthy";
   };
-
-  const getStatusIcon = () => {
-    const variant = getStatusVariant();
-    const iconProps = "w-5 h-5";
-
-    if (variant === "healthy") {
-      return <CheckCircleIcon className={iconProps} />;
-    } else if (variant === "unhealthy") {
-      return <ExclamationCircleIcon className={iconProps} />;
-    } else {
-      return (
-        <div className={`${iconProps} rounded-full border-2 border-yellow-500 border-t-transparent animate-spin`} />
-      );
-    }
-  };
-
-  const isHealthy = health.status === "healthy";
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -101,7 +31,9 @@ export default function HealthStatus() {
           })()}
         </div>
         <div className="flex-1">
-          <p className="font-bold text-xl">{health.message}</p>
+          <p className="font-bold text-xl">
+            {health.status === "healthy" ? "All systems operational" : "Some systems have issues"}
+          </p>
           {health.lastUpdated && (
             <p className="text-sm text-gray-600 mt-1">
               Last checked: {health.lastUpdated.toLocaleTimeString()}
@@ -131,7 +63,7 @@ export default function HealthStatus() {
       )}
 
       {/* Success State Message - Only show if there are errors to acknowledge when they're resolved */}
-      {!isHealthy && health.errors.length === 0 && health.status !== "loading" && (
+      {health.status !== "healthy" && health.errors.length === 0 && health.status !== "loading" && (
         <div className="mt-6 bg-green-50 border-2 border-green-300 rounded-xl p-6">
           <p className="text-base text-green-700 flex items-center gap-3 font-semibold">
             <CheckCircleIcon className="w-7 h-7" />

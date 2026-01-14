@@ -28,7 +28,7 @@ impl<'r> FromRequest<'r> for SteamCMD {
     type Error = SteamCmdError;
 
     async fn from_request(_: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        let cmd = match which("steamcmdddd") {
+        let cmd = match which("steamcmd") {
             Err(_) => {
                 return Outcome::Error((
                     Status::InternalServerError,
