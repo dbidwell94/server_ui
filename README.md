@@ -59,23 +59,43 @@ The server will start at `http://127.0.0.1:8000`
 
 ### Local Development (Recommended)
 
-For the best development experience, run the frontend and backend separately:
+For the best development experience, run the frontend and backend separately with auto-reload:
 
-1. **Start the backend in local-dev mode:**
-   ```bash
-   cargo run --features local-dev
-   ```
-   This runs the backend API on `http://localhost:8000` without serving static files.
+#### Quick Start (One Command)
 
-2. **Start the frontend dev server:**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-   This starts Vite's dev server on `http://localhost:5173` with hot module replacement.
+```bash
+./dev.sh
+```
 
-3. **Access the application:**
-   Open `http://localhost:5173` in your browser. API calls to `/api/*` will be automatically proxied to the backend.
+This helper script will:
+- Install `cargo-watch` if not present (for backend auto-reload)
+- Install frontend dependencies if needed
+- Start both the backend (with auto-reload) and frontend (with HMR) servers
+- Open `http://localhost:5173` in your browser
+
+#### Manual Setup (Two Terminals)
+
+If you prefer to run each service separately:
+
+**Terminal 1 - Backend with auto-reload:**
+```bash
+# Install cargo-watch first (one-time setup)
+cargo install cargo-watch
+
+# Start backend with auto-reload on file changes
+cargo-watch -x 'run --features local-dev'
+```
+
+**Terminal 2 - Frontend dev server:**
+```bash
+cd frontend
+npm run dev
+```
+
+**Access the application:**
+Open `http://localhost:5173` in your browser. API calls to `/api/*` will be automatically proxied to the backend at `http://localhost:8000`.
+
+The backend will automatically rebuild and restart when you modify Rust files, and the frontend will hot-reload when you modify TypeScript/React files.
 
 ### Alternative: Production-like Development
 
@@ -112,6 +132,8 @@ The application uses the following architecture:
 ```
 .
 ├── Cargo.toml              # Rust dependencies
+├── dev.sh                  # Development helper script (auto-reload)
+├── build.sh                # Production build script
 ├── src/
 │   └── main.rs             # Rocket server with embedded assets
 ├── frontend/
