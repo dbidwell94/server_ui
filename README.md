@@ -57,26 +57,64 @@ The server will start at `http://127.0.0.1:8000`
 
 ## Development
 
-### Frontend Development
+### Local Development (Recommended)
 
-For frontend development with hot module replacement:
+For the best development experience, run the frontend and backend separately with auto-reload:
 
+#### Quick Start (One Command)
+
+```bash
+./dev.sh
+```
+
+This helper script will:
+- Install `cargo-watch` if not present (for backend auto-reload)
+- Install frontend dependencies if needed
+- Start both the backend (with auto-reload) and frontend (with HMR) servers
+- Open `http://localhost:5173` in your browser
+
+#### Manual Setup (Two Terminals)
+
+If you prefer to run each service separately:
+
+**Terminal 1 - Backend with auto-reload:**
+```bash
+# Install cargo-watch first (one-time setup)
+cargo install cargo-watch
+
+# Start backend with auto-reload on file changes
+cargo-watch -x 'run --features local-dev'
+```
+
+**Terminal 2 - Frontend dev server:**
 ```bash
 cd frontend
 npm run dev
 ```
 
-This starts a development server at `http://localhost:5173`
+**Access the application:**
+Open `http://localhost:5173` in your browser. API calls to `/api/*` will be automatically proxied to the backend at `http://localhost:8000`.
 
-### Backend Development
+The backend will automatically rebuild and restart when you modify Rust files, and the frontend will hot-reload when you modify TypeScript/React files.
 
-To run the backend in development mode:
+### Alternative: Production-like Development
 
-```bash
-cargo run
-```
+To test the production build locally:
 
-Note: Make sure to build the frontend first so the `static/` directory exists.
+1. **Build the frontend:**
+   ```bash
+   cd frontend
+   npm run build
+   cd ..
+   ```
+
+2. **Run the backend (without local-dev feature):**
+   ```bash
+   cargo run
+   ```
+
+3. **Access the application:**
+   Open `http://localhost:8000` in your browser.
 
 ## Architecture
 
@@ -94,6 +132,8 @@ The application uses the following architecture:
 ```
 .
 ├── Cargo.toml              # Rust dependencies
+├── dev.sh                  # Development helper script (auto-reload)
+├── build.sh                # Production build script
 ├── src/
 │   └── main.rs             # Rocket server with embedded assets
 ├── frontend/

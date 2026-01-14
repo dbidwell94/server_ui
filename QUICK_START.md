@@ -35,22 +35,49 @@ The server will start at http://0.0.0.0:8000
 
 ## Development Mode
 
-For frontend development with hot reload:
+For local development with hot reload:
+
+**Quick Start (One Command):**
 
 ```bash
+./dev.sh
+```
+
+This script starts both backend and frontend with auto-reload enabled. Open http://localhost:5173 in your browser.
+
+**Manual Setup (Two Terminals):**
+
+```bash
+# Terminal 1: Backend with auto-reload
+cargo install cargo-watch  # One-time setup
+cargo-watch -x 'run --features local-dev'
+
+# Terminal 2: Frontend dev server
 cd frontend
 npm run dev
 ```
 
-The dev server will run at http://localhost:5173
+Then open http://localhost:5173 in your browser. This provides:
+- Backend auto-reload when Rust files change (via cargo-watch)
+- Frontend hot module replacement for instant updates
+- API proxy to the backend running on port 8000
+- No need to rebuild after code changes
 
-For backend development:
+**Testing Production Build:**
+
+To test the production build locally:
 
 ```bash
+# Build the frontend once
+cd frontend
+npm run build
+cd ..
+
+# Run the backend
 cargo run
 ```
 
-Note: Build the frontend first so the `static/` directory exists.
+Then open http://localhost:8000 in your browser.
 
 ## Project Structure
 
@@ -62,8 +89,9 @@ server_ui/
 │   │   ├── App.tsx     # Main app component
 │   │   └── main.tsx    # Entry point
 │   └── package.json
-├── build.sh             # Build script
-└── README.md           # Full documentation
+├── dev.sh               # Development helper script
+├── build.sh             # Production build script
+└── README.md            # Full documentation
 ```
 
 ## Next Steps
