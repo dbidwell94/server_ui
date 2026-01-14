@@ -1,7 +1,16 @@
-use rocket::http::{ContentType, Status};
-use rocket::response::Responder;
 use rocket::serde::json::Json;
-use rocket::{get, routes, Request, Response};
+use rocket::{get, routes};
+
+#[cfg(not(feature = "local-dev"))]
+use rocket::http::{ContentType, Status};
+
+#[cfg(not(feature = "local-dev"))]
+use rocket::response::Responder;
+
+#[cfg(not(feature = "local-dev"))]
+use rocket::{Request, Response};
+
+#[cfg(not(feature = "local-dev"))]
 use std::io::Cursor;
 
 #[cfg(not(feature = "local-dev"))]
@@ -12,12 +21,14 @@ use rust_embed::RustEmbed;
 #[folder = "static/"]
 struct StaticFiles;
 
+#[cfg(not(feature = "local-dev"))]
 // Custom responder for embedded files
 struct EmbeddedFile {
     content: Vec<u8>,
     content_type: ContentType,
 }
 
+#[cfg(not(feature = "local-dev"))]
 impl<'r> Responder<'r, 'static> for EmbeddedFile {
     fn respond_to(self, _: &'r Request<'_>) -> rocket::response::Result<'static> {
         Response::build()
