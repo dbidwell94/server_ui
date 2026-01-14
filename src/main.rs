@@ -67,10 +67,11 @@ fn get_embedded_file(path: &str) -> Option<EmbeddedFile> {
 // Serve any static file from the root, or index.html as fallback for SPA routing
 #[get("/<path..>", rank = 10)]
 fn static_files(path: std::path::PathBuf) -> Result<EmbeddedFile, Status> {
-    let path_str = path.to_str().unwrap_or("");
+    // Convert path to string, using lossy conversion for non-UTF8 paths
+    let path_str = path.to_string_lossy();
     
     // Try to serve the exact file first
-    if let Some(file) = get_embedded_file(path_str) {
+    if let Some(file) = get_embedded_file(&path_str) {
         return Ok(file);
     }
     
@@ -91,17 +92,15 @@ fn dev_mode_fallback(_path: std::path::PathBuf) -> Json<serde_json::Value> {
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
+    let rocket = rocket::build();
+    
     #[cfg(not(feature = "local-dev"))]
-    let _rocket = rocket::build()
-        .mount("/", routes![api_health, static_files])
-        .launch()
-        .await?;
+    let rocket = rocket.mount("/", routes![api_health, static_files]);
     
     #[cfg(feature = "local-dev")]
-    let _rocket = rocket::build()
-        .mount("/", routes![api_health, dev_mode_fallback])
-        .launch()
-        .await?;
-
+    let rocket = rocket.mount("/", routes![api_health, dev_mode_fallback]);
+    
+    rocket.launch().await?;
+    
     Ok(())
 }

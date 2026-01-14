@@ -55,7 +55,7 @@ Then open http://localhost:5173 in your browser. This provides:
 
 **Option 2: Production-like Development**
 
-For backend development:
+To test the production build locally:
 
 ```bash
 # Build the frontend once
@@ -67,12 +67,7 @@ cd ..
 cargo run
 ```
 
-For frontend development with hot reload:
-
-```bash
-cd frontend
-npm run dev
-```
+Then open http://localhost:8000 in your browser.
 
 The dev server will run at http://localhost:5173
 
