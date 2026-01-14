@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link } from "react-router-dom";
 
 function Home() {
   return (
@@ -24,7 +24,7 @@ function Home() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function About() {
@@ -33,7 +33,8 @@ function About() {
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">About</h1>
         <p className="text-gray-600 mb-6">
-          This is a demo of a Rust + Rocket backend serving a React SPA with TypeScript, Vite, Tailwind CSS, and React Router.
+          This is a demo of a Rust + Rocket backend serving a React SPA with
+          TypeScript, Vite, Tailwind CSS, and React Router.
         </p>
         <Link
           to="/"
@@ -43,7 +44,7 @@ function About() {
         </Link>
       </div>
     </div>
-  )
+  );
 }
 
 function App() {
@@ -52,7 +53,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

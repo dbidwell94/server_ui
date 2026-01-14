@@ -1,4 +1,6 @@
-use rocket::serde::json::Json;
+mod controller;
+pub mod service;
+
 use rocket::{get, routes};
 
 #[cfg(not(feature = "local-dev"))]
@@ -38,15 +40,6 @@ impl<'r> Responder<'r, 'static> for EmbeddedFile {
     }
 }
 
-// API Routes
-#[get("/api/health")]
-fn api_health() -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "status": "healthy",
-        "message": "Server is running!"
-    }))
-}
-
 #[cfg(not(feature = "local-dev"))]
 // Serve static files with proper content types
 fn get_embedded_file(path: &str) -> Option<EmbeddedFile> {
@@ -82,26 +75,34 @@ fn static_files(path: std::path::PathBuf) -> Result<EmbeddedFile, Status> {
 #[cfg(feature = "local-dev")]
 // In local dev mode, provide a helpful message to use the Vite dev server
 #[get("/<_path..>", rank = 10)]
-fn dev_mode_fallback(_path: std::path::PathBuf) -> Json<serde_json::Value> {
-    Json(serde_json::json!({
+fn dev_mode_fallback(_path: std::path::PathBuf) -> rocket::serde::json::Json<serde_json::Value> {
+    rocket::serde::json::Json(serde_json::json!({
         "message": "Running in local development mode. Please use the Vite dev server at http://localhost:5173",
         "api_available": true,
         "api_health": "/api/health"
     }))
 }
 
-#[allow(clippy::result_large_err)]
 #[rocket::main]
-async fn main() -> Result<(), rocket::Error> {
-    let rocket = rocket::build();
+async fn main() -> anyhow::Result<()> {
+    let mut rocket = rocket::build();
+
+    // Mount all API routes with their respective base paths
+    for (base_path, routes) in controller::get_all_routes() {
+        rocket = rocket.mount(base_path, routes);
+    }
 
     #[cfg(not(feature = "local-dev"))]
-    let rocket = rocket.mount("/", routes![api_health, static_files]);
+    {
+        rocket = rocket.mount("/", routes![static_files]);
+        rocket.launch().await?;
+    }
 
     #[cfg(feature = "local-dev")]
-    let rocket = rocket.mount("/", routes![api_health, dev_mode_fallback]);
-
-    rocket.launch().await?;
+    {
+        rocket = rocket.mount("/", routes![dev_mode_fallback]);
+        rocket.launch().await?;
+    }
 
     Ok(())
 }
