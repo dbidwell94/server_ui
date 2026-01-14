@@ -1,0 +1,10 @@
+/target
+Cargo.lock
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.vite
+
+# Static files (will be embedded)
+static/
