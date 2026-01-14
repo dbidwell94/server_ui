@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 interface HealthData {
   status: "healthy" | "unhealthy" | "loading" | "error";
@@ -16,27 +17,24 @@ export function useHealth() {
   useEffect(() => {
     const checkHealth = async () => {
       try {
-        const response = await fetch("/api/health");
-        if (response.ok) {
-          const data = await response.json();
-          const isHealthy = data.status === "healthy";
+        const response = await axios.get("/api/health");
+        const isHealthy = response.data.status === "healthy";
 
-          setHealth({
-            status: isHealthy ? "healthy" : "unhealthy",
-            errors: data.errors || [],
-            lastUpdated: new Date(),
-          });
-        } else {
-          setHealth({
-            status: "unhealthy",
-            errors: [`HTTP ${response.status}`],
-            lastUpdated: new Date(),
-          });
-        }
+        setHealth({
+          status: isHealthy ? "healthy" : "unhealthy",
+          errors: response.data.errors || [],
+          lastUpdated: new Date(),
+        });
       } catch (error) {
         setHealth({
           status: "error",
-          errors: [error instanceof Error ? error.message : "Unknown error"],
+          errors: [
+            axios.isAxiosError(error)
+              ? error.response?.status
+                ? `HTTP ${error.response.status}`
+                : error.message
+              : "Unknown error",
+          ],
           lastUpdated: new Date(),
         });
       }
