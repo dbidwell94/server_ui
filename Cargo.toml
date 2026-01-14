@@ -1,0 +1,10 @@
+[package]
+name = "server_ui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = { version = "0.5.1", features = ["json"] }
+rust-embed = "8.5.0"
+mime_guess = "2.0.5"
+serde_json = "1.0"
