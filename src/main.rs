@@ -53,9 +53,9 @@ fn get_embedded_file(path: &str) -> Option<EmbeddedFile> {
     StaticFiles::get(path).map(|file| {
         let content_type = mime_guess::from_path(path)
             .first()
-            .and_then(|mime| ContentType::parse_flexible(&mime.to_string()))
+            .and_then(|mime| ContentType::parse_flexible(mime.as_ref()))
             .unwrap_or(ContentType::Binary);
-        
+
         EmbeddedFile {
             content: file.data.to_vec(),
             content_type,
@@ -69,12 +69,12 @@ fn get_embedded_file(path: &str) -> Option<EmbeddedFile> {
 fn static_files(path: std::path::PathBuf) -> Result<EmbeddedFile, Status> {
     // Convert path to string, using lossy conversion for non-UTF8 paths
     let path_str = path.to_string_lossy();
-    
+
     // Try to serve the exact file first
     if let Some(file) = get_embedded_file(&path_str) {
         return Ok(file);
     }
-    
+
     // If not found, serve index.html for SPA routing
     get_embedded_file("index.html").ok_or(Status::NotFound)
 }
@@ -91,16 +91,16 @@ fn dev_mode_fallback(_path: std::path::PathBuf) -> Json<serde_json::Value> {
 }
 
 #[rocket::main]
-async fn main() -> Result<(), rocket::Error> {
+async fn main() -> Result<(), Box<rocket::Error>> {
     let rocket = rocket::build();
-    
+
     #[cfg(not(feature = "local-dev"))]
     let rocket = rocket.mount("/", routes![api_health, static_files]);
-    
+
     #[cfg(feature = "local-dev")]
     let rocket = rocket.mount("/", routes![api_health, dev_mode_fallback]);
-    
-    rocket.launch().await?;
-    
+
+    rocket.launch().await.map_err(Box::new)?;
+
     Ok(())
 }
