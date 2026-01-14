@@ -3,6 +3,10 @@ name = "server_ui"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+local-dev = []
+
 [dependencies]
 rocket = { version = "0.5.1", features = ["json"] }
 rust-embed = "8.5.0"

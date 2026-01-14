@@ -8,4 +8,14 @@ export default defineConfig({
     outDir: '../static',
     emptyOutDir: true,
   },
+  server: {
+    port: 5173,
+    proxy: {
+      // Proxy API requests to the Rust backend in development
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
 })

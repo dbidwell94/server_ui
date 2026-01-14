@@ -2,9 +2,12 @@ use rocket::http::{ContentType, Status};
 use rocket::response::Responder;
 use rocket::serde::json::Json;
 use rocket::{get, routes, Request, Response};
-use rust_embed::RustEmbed;
 use std::io::Cursor;
 
+#[cfg(not(feature = "local-dev"))]
+use rust_embed::RustEmbed;
+
+#[cfg(not(feature = "local-dev"))]
 #[derive(RustEmbed)]
 #[folder = "static/"]
 struct StaticFiles;
@@ -33,6 +36,7 @@ fn api_health() -> Json<serde_json::Value> {
     }))
 }
 
+#[cfg(not(feature = "local-dev"))]
 // Serve static files with proper content types
 fn get_embedded_file(path: &str) -> Option<EmbeddedFile> {
     StaticFiles::get(path).map(|file| {
@@ -48,29 +52,43 @@ fn get_embedded_file(path: &str) -> Option<EmbeddedFile> {
     })
 }
 
-// Serve index.html for all non-API routes (SPA routing)
-#[get("/<_path..>", rank = 10)]
-fn spa_route(_path: std::path::PathBuf) -> Result<EmbeddedFile, Status> {
+#[cfg(not(feature = "local-dev"))]
+// Serve any static file from the root, or index.html as fallback for SPA routing
+#[get("/<path..>", rank = 10)]
+fn static_files(path: std::path::PathBuf) -> Result<EmbeddedFile, Status> {
+    let path_str = path.to_str().unwrap_or("");
+    
+    // Try to serve the exact file first
+    if let Some(file) = get_embedded_file(path_str) {
+        return Ok(file);
+    }
+    
+    // If not found, serve index.html for SPA routing
     get_embedded_file("index.html").ok_or(Status::NotFound)
 }
 
-// Serve static assets
-#[get("/assets/<file..>")]
-fn assets(file: std::path::PathBuf) -> Result<EmbeddedFile, Status> {
-    let path = format!("assets/{}", file.display());
-    get_embedded_file(&path).ok_or(Status::NotFound)
-}
-
-// Serve vite.svg
-#[get("/vite.svg")]
-fn vite_svg() -> Result<EmbeddedFile, Status> {
-    get_embedded_file("vite.svg").ok_or(Status::NotFound)
+#[cfg(feature = "local-dev")]
+// In local dev mode, provide a helpful message to use the Vite dev server
+#[get("/<_path..>", rank = 10)]
+fn dev_mode_fallback(_path: std::path::PathBuf) -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "message": "Running in local development mode. Please use the Vite dev server at http://localhost:5173",
+        "api_available": true,
+        "api_health": "/api/health"
+    }))
 }
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
+    #[cfg(not(feature = "local-dev"))]
     let _rocket = rocket::build()
-        .mount("/", routes![api_health, assets, vite_svg, spa_route])
+        .mount("/", routes![api_health, static_files])
+        .launch()
+        .await?;
+    
+    #[cfg(feature = "local-dev")]
+    let _rocket = rocket::build()
+        .mount("/", routes![api_health, dev_mode_fallback])
         .launch()
         .await?;
 
