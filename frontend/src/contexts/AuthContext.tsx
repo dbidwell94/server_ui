@@ -32,10 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
         setAccessTokenState("cached"); // Just indicate we have a token
       } catch (error) {
-        // /whoami failed - might be no token, or token expired
-        // Try to refresh using the refresh token cookie
         try {
-          console.log("No access token, attempting to refresh...");
           const refreshResponse = await apiClient.post("/user/refresh", {});
           const newAccessToken = refreshResponse.data.accessToken;
           setAccessToken(newAccessToken);
@@ -45,8 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const whoamiResponse = await apiClient.get<User>("/user/whoami");
           setUser(whoamiResponse.data);
         } catch (refreshError) {
-          // Refresh also failed - user is not authenticated
-          console.log("Refresh failed, user not authenticated");
           setUser(null);
           setAccessTokenState(null);
           setAccessToken(null);

@@ -102,7 +102,7 @@ async fn main() -> anyhow::Result<()> {
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://data/server_ui.db".to_string());
 
     let db = db::init(&database_url).await?;
-    let mut steamcmd = state::steamcmd::SteamCMD::create()?;
+    let mut steamcmd = state::steamcmd::SteamCMD::create(None)?;
     steamcmd.init().await?;
 
     let mut rocket = rocket::build().manage(db).manage(steamcmd);
