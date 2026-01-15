@@ -82,7 +82,7 @@ trap cleanup SIGINT SIGTERM EXIT
 # Start backend with cargo-watch if available, otherwise cargo run
 if command -v cargo-watch &> /dev/null; then
     echo -e "${GREEN}Starting backend with cargo-watch (auto-reload enabled)...${NC}"
-    cargo-watch -x 'run --features local-dev' &
+    cargo-watch -i frontend -i target -x 'run --features local-dev' &
 else
     echo -e "${YELLOW}Starting backend without auto-reload...${NC}"
     cargo run --features local-dev &

@@ -6,7 +6,8 @@ use rocket::{
     request::{FromRequest, Outcome},
     response::Responder,
 };
-use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait};
+use sea_orm::prelude::*;
+use sea_orm::QuerySelect;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -69,5 +70,15 @@ impl User {
     pub async fn get_user_by_id(&self, id: i32) -> Result<dto::user::Minimum, UserError> {
         let user = entity::user::Entity::find_by_id(id).one(&self.db).await?;
         Ok(user.map(Into::into).ok_or(UserError::NotFound(id))?)
+    }
+
+    pub async fn has_admin(&self) -> Result<bool, UserError> {
+        let has_user = entity::user::Entity::find()
+            .limit(1)
+            .all(&self.db)
+            .await?
+            .len()
+            > 0;
+        Ok(has_user)
     }
 }
