@@ -1,4 +1,3 @@
-use crate::service::steamcmd::{SteamCMD, SteamCmdError};
 use crate::service::user::{User, UserError};
 use rocket::serde::json::Json;
 use rocket::{get, routes, Route};
@@ -22,15 +21,8 @@ fn health() -> Json<HealthResponse> {
 }
 
 #[get("/health_detailed")]
-fn health_detailed(
-    steam_cmd: Result<SteamCMD, SteamCmdError>,
-    user_service: Result<User, UserError>,
-) -> Json<HealthResponse> {
+fn health_detailed(user_service: Result<User, UserError>) -> Json<HealthResponse> {
     let mut errors = Vec::<String>::new();
-
-    if let Err(e) = steam_cmd {
-        errors.push(e.to_string());
-    }
 
     if let Err(e) = user_service {
         errors.push(e.to_string());

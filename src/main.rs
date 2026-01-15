@@ -1,9 +1,10 @@
-mod controller;
 pub mod auth;
+mod controller;
 pub mod db;
 pub mod dto;
 pub mod entity;
 pub mod service;
+pub mod state;
 pub mod utils;
 
 use rocket::http::Method;
@@ -101,8 +102,10 @@ async fn main() -> anyhow::Result<()> {
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://data/server_ui.db".to_string());
 
     let db = db::init(&database_url).await?;
+    let mut steamcmd = state::steamcmd::SteamCMD::create()?;
+    steamcmd.init().await?;
 
-    let mut rocket = rocket::build().manage(db);
+    let mut rocket = rocket::build().manage(db).manage(steamcmd);
 
     // Mount all API routes with their respective base paths
     for (base_path, routes) in controller::get_all_routes() {

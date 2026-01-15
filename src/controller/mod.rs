@@ -1,4 +1,5 @@
 mod health;
+mod steamcmd;
 mod user;
 
 use rocket::{response::Responder, Route};
@@ -10,6 +11,7 @@ pub fn get_all_routes() -> Vec<(&'static str, Vec<Route>)> {
     let mut routes = vec![(BASE_PATH, health::routes())];
 
     routes.extend(user::get_all_routes());
+    routes.extend(steamcmd::get_all_routes());
 
     routes
 }
@@ -20,7 +22,7 @@ pub enum Error {
     User(#[from] crate::service::user::UserError),
 
     #[error(transparent)]
-    SteamCMD(#[from] crate::service::steamcmd::SteamCmdError),
+    SteamCMD(#[from] crate::state::steamcmd::SteamCmdError),
 }
 
 impl<'r> Responder<'r, 'static> for Error {
