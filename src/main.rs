@@ -1,6 +1,12 @@
 mod controller;
+pub mod auth;
+pub mod db;
+pub mod dto;
+pub mod entity;
 pub mod service;
+pub mod utils;
 
+use rocket::http::Method;
 use rocket::{get, routes};
 
 #[cfg(not(feature = "local-dev"))]
@@ -11,6 +17,7 @@ use rocket::response::Responder;
 
 #[cfg(not(feature = "local-dev"))]
 use rocket::{Request, Response};
+use rocket_ext::cors::Cors;
 
 #[cfg(not(feature = "local-dev"))]
 use std::io::Cursor;
@@ -85,22 +92,45 @@ fn dev_mode_fallback(_path: std::path::PathBuf) -> rocket::serde::json::Json<ser
 
 #[rocket::main]
 async fn main() -> anyhow::Result<()> {
-    let mut rocket = rocket::build();
+    // Initialize database
+    #[cfg(feature = "local-dev")]
+    let database_url = "sqlite::memory:".to_string();
+
+    #[cfg(not(feature = "local-dev"))]
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://data/server_ui.db".to_string());
+
+    let db = db::init(&database_url).await?;
+
+    let mut rocket = rocket::build().manage(db);
 
     // Mount all API routes with their respective base paths
     for (base_path, routes) in controller::get_all_routes() {
         rocket = rocket.mount(base_path, routes);
     }
 
+    let cors = Cors::builder()
+        .with_any_origin()
+        .with_methods(&[
+            Method::Get,
+            Method::Post,
+            Method::Put,
+            Method::Delete,
+            Method::Options,
+        ])
+        .with_max_age(std::time::Duration::from_secs(3600))
+        .with_headers(&["Content-Type", "Authorization"])
+        .build()?;
+
     #[cfg(not(feature = "local-dev"))]
     {
-        rocket = rocket.mount("/", routes![static_files]);
+        rocket = rocket.mount("/", routes![static_files]).attach(cors);
         rocket.launch().await?;
     }
 
     #[cfg(feature = "local-dev")]
     {
-        rocket = rocket.mount("/", routes![dev_mode_fallback]);
+        rocket = rocket.mount("/", routes![dev_mode_fallback]).attach(cors);
         rocket.launch().await?;
     }
 
