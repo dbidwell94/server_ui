@@ -1,4 +1,6 @@
 mod controller;
+pub mod db;
+pub mod entity;
 pub mod service;
 
 use rocket::{get, routes};
@@ -85,6 +87,11 @@ fn dev_mode_fallback(_path: std::path::PathBuf) -> rocket::serde::json::Json<ser
 
 #[rocket::main]
 async fn main() -> anyhow::Result<()> {
+    // Initialize database
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://data/server_ui.db".to_string());
+    let _db = db::init(&database_url).await?;
+
     let mut rocket = rocket::build();
 
     // Mount all API routes with their respective base paths

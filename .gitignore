@@ -8,3 +8,6 @@ frontend/.vite
 
 # Static files (will be embedded)
 static/
+
+# Database
+data/
