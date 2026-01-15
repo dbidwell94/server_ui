@@ -1,0 +1,46 @@
+@reference "../index.css";
+
+.inputWrapper {
+    @apply relative inline-flex flex-1;
+}
+
+.inputWrapper input {
+    @apply bg-transparent outline-none w-full flex-1;
+    caret-color: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+}
+
+.inputWrapper input::selection {
+    @apply bg-cyan-500 text-black;
+}
+
+.terminalContainer::selection {
+    @apply bg-cyan-500 text-black;
+}
+
+.terminalContainer ::-moz-selection {
+    @apply bg-cyan-500 text-black;
+}
+
+.cursor {
+    @apply absolute pointer-events-none z-1;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.4em;
+    height: 1.2em;
+    background-color: #22c55e;
+    animation: blink 0.6s infinite;
+}
+
+@keyframes blink {
+    0%,
+    49% {
+        opacity: 1;
+    }
+    50%,
+    100% {
+        opacity: 0;
+    }
+}

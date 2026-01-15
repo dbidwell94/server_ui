@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import PageLayout from "../components/PageLayout";
 import FormCard from "../components/FormCard";
 import TextInput from "../components/TextInput";
 import Button from "../components/Button";
@@ -67,8 +68,10 @@ export default function Login() {
   };
 
   return (
-    <FormCard title="Login" subtitle="Sign in to your account">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <PageLayout showFooter>
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <FormCard title="Login" subtitle="Sign in to your account">
+          <form onSubmit={handleSubmit} className="space-y-6">
         <TextInput
           id="username"
           name="username"
@@ -96,6 +99,8 @@ export default function Login() {
           Sign In
         </Button>
       </form>
-    </FormCard>
+        </FormCard>
+      </div>
+    </PageLayout>
   );
 }

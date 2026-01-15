@@ -1,28 +1,13 @@
 import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import PageLayout from "../components/PageLayout";
 import HealthStatus from "../components/HealthStatus";
-import { useEffect } from "react";
 
 export default function Home() {
-  useEffect(() => {
-    const evtSource = new EventSource("/api/steamcmd/stdout");
-
-    evtSource.onmessage = (evt) => {
-      console.log(evt);
-    };
-
-    return () => {
-      evtSource.close();
-    };
-  }, []);
-
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <Navbar />
-
+    <PageLayout showFooter>
       {/* Hero Section */}
-      <div className="flex-1 bg-linear-to-r from-blue-600 to-blue-800 text-white flex flex-col items-center justify-center px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-4">
+        <div className="max-w-4xl mx-auto text-center text-white">
           <h2 className="text-5xl md:text-6xl font-bold mb-6">
             Seamlessly manage your headless Steam server
           </h2>
@@ -46,15 +31,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <p>
-            &copy; 2026 Devin Bidwell - Server UI. Built with Rust and React.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PageLayout>
   );
 }

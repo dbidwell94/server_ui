@@ -36,18 +36,19 @@ export default function Navbar() {
     logout();
     setIsDropdownOpen(false);
     closeMenu();
-    navigate("/login");
+    navigate("/home");
   };
 
   const getStatusColor = () => {
-    if (health.status === "healthy") return "bg-green-500";
-    if (health.status === "unhealthy") return "bg-red-500";
-    if (health.status === "error") return "bg-red-500";
-    return "bg-yellow-500";
-  };
-
-  const getStatusPulse = () => {
-    return "animate-pulse";
+    switch (health.status) {
+      case "healthy":
+        return "bg-green-500";
+      case "unhealthy":
+      case "error":
+        return "bg-red-500";
+      default:
+        return "bg-yellow-500";
+    }
   };
 
   return (
@@ -58,7 +59,7 @@ export default function Navbar() {
             {/* Logo with Status Indicator */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${getStatusColor()} ${getStatusPulse()}`} />
+                <span className={`w-3 h-3 rounded-full ${getStatusColor()} animate-pulse`} />
                 <h1 className="text-2xl font-bold text-gray-900">Server UI</h1>
               </div>
             </Link>
@@ -72,12 +73,14 @@ export default function Navbar() {
                 About
               </Link>
               {isAuthenticated && user ? (
-                <UserDropdown
-                  user={user}
-                  isOpen={isDropdownOpen}
-                  onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
-                  onLogout={handleLogout}
-                />
+                <>
+                  <UserDropdown
+                    user={user}
+                    isOpen={isDropdownOpen}
+                    onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
+                    onLogout={handleLogout}
+                  />
+                </>
               ) : (
                 <Link
                   to="/login"

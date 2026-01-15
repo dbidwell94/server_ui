@@ -9,6 +9,7 @@ import Button from "../components/Button";
 import ErrorMessage from "../components/ErrorMessage";
 import { onboardingSchema } from "../schemas/onboarding";
 import { useHasAdminQuery } from "../hooks/useHasAdminQuery";
+import PageLayout from "../components/PageLayout";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -114,49 +115,53 @@ export default function Onboarding() {
   };
 
   return (
-    <FormCard title="Welcome" subtitle="Create your first admin account to get started">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <TextInput
-          id="username"
-          name="username"
-          label="Username"
-          value={formData.username}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          placeholder="admin"
-          helperText={errors.username}
-        />
+    <PageLayout showFooter showNavbar={false}>
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <FormCard title="Welcome" subtitle="Create your first admin account to get started">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <TextInput
+              id="username"
+              name="username"
+              label="Username"
+              value={formData.username}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              placeholder="admin"
+              helperText={errors.username}
+            />
 
-        <TextInput
-          id="password"
-          name="password"
-          type="password"
-          label="Password"
-          value={formData.password}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          placeholder="••••••••"
-          helperText={errors.password}
-        />
+            <TextInput
+              id="password"
+              name="password"
+              type="password"
+              label="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              placeholder="••••••••"
+              helperText={errors.password}
+            />
 
-        <TextInput
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          label="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          placeholder="••••••••"
-          helperText={errors.confirmPassword}
-        />
+            <TextInput
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              label="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              placeholder="••••••••"
+              helperText={errors.confirmPassword}
+            />
 
-        {serverError && <ErrorMessage message={serverError} />}
+            {serverError && <ErrorMessage message={serverError} />}
 
-        <Button type="submit" isLoading={isLoading} loadingText="Creating account...">
-          Create Admin Account
-        </Button>
-      </form>
-    </FormCard>
+            <Button type="submit" isLoading={isLoading} loadingText="Creating account...">
+              Create Admin Account
+            </Button>
+          </form>
+        </FormCard>
+      </div>
+    </PageLayout>
   );
 }
