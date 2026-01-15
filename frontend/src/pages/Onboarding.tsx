@@ -1,46 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import FormCard from "../components/FormCard";
 import TextInput from "../components/TextInput";
 import Button from "../components/Button";
 import ErrorMessage from "../components/ErrorMessage";
+import { onboardingSchema } from "../schemas/onboarding";
+import { useHasAdminQuery } from "../hooks/useHasAdminQuery";
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: adminData } = useHasAdminQuery();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     confirmPassword: "",
   });
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Redirect to home if admin already exists
+  useEffect(() => {
+    if (adminData?.hasAdmin) {
+      navigate("/", { replace: true });
+    }
+  }, [adminData?.hasAdmin, navigate]);
+
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+    const updatedData = {
+      ...formData,
       [name]: value,
-    }));
+    };
+    setFormData(updatedData);
+
+    // Validate the specific field onChange
+    try {
+      await onboardingSchema.validateAt(name, updatedData);
+      // Clear error for this field if validation passes
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    } catch (err) {
+      // Set error for this field if validation fails
+      if (err instanceof Error && "message" in err) {
+        setErrors((prev) => ({
+          ...prev,
+          [name]: err.message,
+        }));
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setServerError(null);
+    setErrors({});
 
-    // Validation
-    if (!formData.username.trim()) {
-      setError("Username is required");
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+    try {
+      // Validate form data with yup
+      await onboardingSchema.validate(formData, { abortEarly: false });
+    } catch (err) {
+      // Handle validation errors
+      if (err instanceof Error && "inner" in err) {
+        const validationErrors: Record<string, string> = {};
+        (err.inner as Array<{ path: string; message: string }>).forEach((error) => {
+          validationErrors[error.path] = error.message;
+        });
+        setErrors(validationErrors);
+      }
       return;
     }
 
@@ -52,14 +84,15 @@ export default function Onboarding() {
         password: formData.password,
       });
 
-      // Redirect to home on success
-      navigate("/");
+      // Invalidate the has_admin query to trigger a refetch
+      await queryClient.invalidateQueries({ queryKey: ["admin", "has_admin"] });
+
     } catch (err) {
       const errorMessage = axios.isAxiosError(err)
         ? err.response?.data?.message || `Error: ${err.response?.status}`
         : "Failed to create admin user";
 
-      setError(errorMessage);
+      setServerError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +109,7 @@ export default function Onboarding() {
           onChange={handleInputChange}
           disabled={isLoading}
           placeholder="admin"
+          helperText={errors.username}
         />
 
         <TextInput
@@ -87,7 +121,7 @@ export default function Onboarding() {
           onChange={handleInputChange}
           disabled={isLoading}
           placeholder="••••••••"
-          helperText="At least 8 characters"
+          helperText={errors.password}
         />
 
         <TextInput
@@ -99,9 +133,10 @@ export default function Onboarding() {
           onChange={handleInputChange}
           disabled={isLoading}
           placeholder="••••••••"
+          helperText={errors.confirmPassword}
         />
 
-        {error && <ErrorMessage message={error} />}
+        {serverError && <ErrorMessage message={serverError} />}
 
         <Button type="submit" isLoading={isLoading} loadingText="Creating account...">
           Create Admin Account

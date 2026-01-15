@@ -23,6 +23,8 @@ export default function TextInput({
   placeholder = "",
   helperText,
 }: TextInputProps) {
+  const isError = helperText && helperText.length > 0;
+
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
@@ -36,9 +38,17 @@ export default function TextInput({
         onChange={onChange}
         disabled={disabled}
         placeholder={placeholder}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className={`w-full px-4 py-2 border rounded-lg outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed ${
+          isError
+            ? "border-red-300 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            : "border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        }`}
       />
-      {helperText && <p className="text-xs text-gray-500 mt-1">{helperText}</p>}
+      {helperText && (
+        <p className={`text-xs mt-1 ${isError ? "text-red-600 font-medium" : "text-gray-500"}`}>
+          {helperText}
+        </p>
+      )}
     </div>
   );
 }
