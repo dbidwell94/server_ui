@@ -5,23 +5,26 @@ use std::path::Path;
 
 /// Initialize the database connection and run migrations
 pub async fn init(database_url: &str) -> Result<DatabaseConnection> {
-    // Extract the database path and create the directory
-    let db_path = if let Some(path) = database_url.strip_prefix("sqlite://") {
-        path.split('?').next().unwrap_or(path)
-    } else {
-        database_url
-    };
+    // Only create directories for file-based databases (not in-memory)
+    if !database_url.contains(":memory:") {
+        // Extract the database path and create the directory
+        let db_path = if let Some(path) = database_url.strip_prefix("sqlite://") {
+            path.split('?').next().unwrap_or(path)
+        } else {
+            database_url
+        };
 
-    // Create parent directories if they don't exist
-    if let Some(parent) = Path::new(db_path).parent() {
-        let parent_str = parent.to_string_lossy();
-        if !parent_str.is_empty() && parent_str != "." {
-            std::fs::create_dir_all(parent)?;
+        // Create parent directories if they don't exist
+        if let Some(parent) = Path::new(db_path).parent() {
+            let parent_str = parent.to_string_lossy();
+            if !parent_str.is_empty() && parent_str != "." {
+                std::fs::create_dir_all(parent)?;
+            }
         }
     }
 
     // Ensure the connection string has the proper SQLite flags for creation
-    let connection_url = if database_url.contains('?') {
+    let connection_url = if database_url.contains(':') || database_url.contains('?') {
         database_url.to_string()
     } else {
         format!("{}?mode=rwc", database_url)
