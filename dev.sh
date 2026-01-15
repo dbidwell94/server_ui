@@ -63,11 +63,21 @@ echo ""
 cleanup() {
     echo ""
     echo -e "${YELLOW}Stopping servers...${NC}"
-    jobs -p | xargs -r kill 2>/dev/null || true
+    
+    # Kill all child processes
+    kill $(jobs -p) 2>/dev/null || true
+    
+    # Give processes a moment to shut down gracefully
+    sleep 1
+    
+    # Force kill any remaining processes
+    pkill -P $$ 2>/dev/null || true
+    
+    echo -e "${GREEN}Servers stopped.${NC}"
     exit 0
 }
 
-trap cleanup SIGINT SIGTERM
+trap cleanup SIGINT SIGTERM EXIT
 
 # Start backend with cargo-watch if available, otherwise cargo run
 if command -v cargo-watch &> /dev/null; then
@@ -78,13 +88,19 @@ else
     cargo run --features local-dev &
 fi
 
+BACKEND_PID=$!
+
 # Give the backend a moment to start
 sleep 2
 
-# Start frontend dev server
+# Start frontend dev server in background
 echo -e "${GREEN}Starting frontend dev server...${NC}"
 cd frontend
-npm run dev
+npm run dev &
+
+FRONTEND_PID=$!
+
+cd ..
 
 # Wait for all background jobs
 wait
