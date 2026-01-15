@@ -90,9 +90,9 @@ async fn main() -> anyhow::Result<()> {
     // Initialize database
     let database_url =
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://data/server_ui.db".to_string());
-    let _db = db::init(&database_url).await?;
+    let db = db::init(&database_url).await?;
 
-    let mut rocket = rocket::build();
+    let mut rocket = rocket::build().manage(db);
 
     // Mount all API routes with their respective base paths
     for (base_path, routes) in controller::get_all_routes() {

@@ -1,9 +1,10 @@
 use anyhow::Result;
-use sea_orm::{Database, DbConn};
+use migration::MigratorTrait;
+use sea_orm::DatabaseConnection;
 use std::path::Path;
 
 /// Initialize the database connection and run migrations
-pub async fn init(database_url: &str) -> Result<DbConn> {
+pub async fn init(database_url: &str) -> Result<DatabaseConnection> {
     // Extract the database path and create the directory
     let db_path = if let Some(path) = database_url.strip_prefix("sqlite://") {
         path.split('?').next().unwrap_or(path)
@@ -27,7 +28,7 @@ pub async fn init(database_url: &str) -> Result<DbConn> {
     };
 
     // Connect to the database
-    let db = Database::connect(&connection_url).await?;
+    let db = sea_orm::Database::connect(&connection_url).await?;
 
     // Run migrations
     run_migrations(&db).await?;
@@ -36,9 +37,7 @@ pub async fn init(database_url: &str) -> Result<DbConn> {
 }
 
 /// Run database migrations
-async fn run_migrations(db: &DbConn) -> Result<()> {
-    // Migrations will be added here as needed
-    // For now, we'll just ensure the database is accessible
-    db.ping().await?;
+async fn run_migrations(db: &DatabaseConnection) -> Result<()> {
+    migration::Migrator::up(db, None).await?;
     Ok(())
 }
