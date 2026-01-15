@@ -4,10 +4,12 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useHealth } from "../hooks/useHealth";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../lib/api";
+import UserDropdown from "./UserDropdown";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const health = useHealth();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ export default function Navbar() {
       console.error('Logout request failed:', error);
     }
     logout();
+    setIsDropdownOpen(false);
     closeMenu();
     navigate("/login");
   };
@@ -69,15 +72,12 @@ export default function Navbar() {
                 About
               </Link>
               {isAuthenticated && user ? (
-                <div className="flex items-center gap-4">
-                  <span className="text-gray-700 font-medium">{user.username}</span>
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition font-medium"
-                  >
-                    Logout
-                  </button>
-                </div>
+                <UserDropdown
+                  user={user}
+                  isOpen={isDropdownOpen}
+                  onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onLogout={handleLogout}
+                />
               ) : (
                 <Link
                   to="/login"

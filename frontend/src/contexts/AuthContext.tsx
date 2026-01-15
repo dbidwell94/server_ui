@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import apiClient, { setAccessToken } from "../lib/api";
 
-interface User {
+export interface User {
   id: number;
   username: string;
 }
