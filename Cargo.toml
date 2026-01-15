@@ -7,6 +7,9 @@ edition = "2021"
 default = []
 local-dev = []
 
+[workspace]
+members = ["migration"]
+
 [dependencies]
 rocket = { version = "0.5.1", features = ["json"] }
 rust-embed = "8.5.0"
@@ -16,6 +19,7 @@ anyhow = { version = "1.0" }
 thiserror = { version = "2.0" }
 which = { version = "8" }
 serde = { version = "1.0", features = ["derive"] }
+migration = { path = "./migration" }
 
 # Database
 sea-orm = { version = "1.1", features = [
