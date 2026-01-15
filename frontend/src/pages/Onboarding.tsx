@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import apiClient from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
 import FormCard from "../components/FormCard";
 import TextInput from "../components/TextInput";
 import Button from "../components/Button";
@@ -13,6 +14,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: adminData } = useHasAdminQuery();
+  const { setTokens } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -79,18 +81,31 @@ export default function Onboarding() {
     setIsLoading(true);
 
     try {
-      await axios.post("/api/user/create", {
+      // Create the user
+      await apiClient.post("/user/create", {
         username: formData.username,
         password: formData.password,
       });
 
+      // Auto-login with the credentials
+      const loginResponse = await apiClient.post("/user/login", {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      const { user, accessToken } = loginResponse.data;
+      setTokens(user, accessToken);
+
       // Invalidate the has_admin query to trigger a refetch
       await queryClient.invalidateQueries({ queryKey: ["admin", "has_admin"] });
 
+      // Navigate directly to home (authenticated route)
+      navigate("/home", { replace: true });
     } catch (err) {
-      const errorMessage = axios.isAxiosError(err)
-        ? err.response?.data?.message || `Error: ${err.response?.status}`
-        : "Failed to create admin user";
+      const errorMessage =
+        err instanceof Error && "response" in err
+          ? (err as any).response?.data?.message || `Error: ${(err as any).response?.status}`
+          : "Failed to create admin user";
 
       setServerError(errorMessage);
     } finally {

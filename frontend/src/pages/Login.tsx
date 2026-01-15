@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
 import FormCard from "../components/FormCard";
 import TextInput from "../components/TextInput";
 import Button from "../components/Button";
@@ -8,6 +9,7 @@ import ErrorMessage from "../components/ErrorMessage";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setTokens } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -44,18 +46,19 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual login API endpoint
-      await axios.post("/api/auth/login", {
+      const response = await apiClient.post("/user/login", {
         username: formData.username,
         password: formData.password,
       });
 
-      // TODO: Store auth token and redirect to home
+      const { user, accessToken } = response.data;
+      setTokens(user, accessToken);
       navigate("/");
     } catch (err) {
-      const errorMessage = axios.isAxiosError(err)
-        ? err.response?.data?.message || "Invalid credentials"
-        : "Login failed";
+      const errorMessage =
+        err instanceof Error && "response" in err
+          ? (err as any).response?.data?.message || "Invalid credentials"
+          : "Login failed";
 
       setError(errorMessage);
     } finally {

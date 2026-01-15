@@ -6,6 +6,8 @@ import './index.css'
 import App from './App.tsx'
 import { queryClient } from './lib/queryClient'
 
+console.log("test");
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

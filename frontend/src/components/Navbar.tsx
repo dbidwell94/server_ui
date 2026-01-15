@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useHealth } from "../hooks/useHealth";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../lib/api";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const health = useHealth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -19,6 +23,17 @@ export default function Navbar() {
       setIsOpen(false);
       setIsClosing(false);
     }, 150);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/user/logout');
+    } catch (error) {
+      console.error('Logout request failed:', error);
+    }
+    logout();
+    closeMenu();
+    navigate("/login");
   };
 
   const getStatusColor = () => {
@@ -53,9 +68,24 @@ export default function Navbar() {
               >
                 About
               </Link>
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                Login
-              </button>
+              {isAuthenticated && user ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-700 font-medium">{user.username}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                  Login
+                </Link>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -100,9 +130,27 @@ export default function Navbar() {
               >
                 About
               </Link>
-              <button className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
-                Login
-              </button>
+              {isAuthenticated && user ? (
+                <div className="space-y-4">
+                  <div className="px-4 py-3 text-gray-700 font-medium">
+                    Signed in as: {user.username}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="block w-full text-center bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                  onClick={closeMenu}
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
