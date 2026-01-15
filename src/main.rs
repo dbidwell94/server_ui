@@ -1,9 +1,11 @@
 mod controller;
 pub mod db;
+pub mod dto;
 pub mod entity;
 pub mod service;
 pub mod utils;
 
+use rocket::http::Method;
 use rocket::{get, routes};
 
 #[cfg(not(feature = "local-dev"))]
@@ -14,6 +16,7 @@ use rocket::response::Responder;
 
 #[cfg(not(feature = "local-dev"))]
 use rocket::{Request, Response};
+use rocket_ext::cors::Cors;
 
 #[cfg(not(feature = "local-dev"))]
 use std::io::Cursor;
@@ -105,15 +108,28 @@ async fn main() -> anyhow::Result<()> {
         rocket = rocket.mount(base_path, routes);
     }
 
+    let cors = Cors::builder()
+        .with_any_origin()
+        .with_methods(&[
+            Method::Get,
+            Method::Post,
+            Method::Put,
+            Method::Delete,
+            Method::Options,
+        ])
+        .with_max_age(std::time::Duration::from_secs(3600))
+        .with_headers(&["Content-Type", "Authorization"])
+        .build()?;
+
     #[cfg(not(feature = "local-dev"))]
     {
-        rocket = rocket.mount("/", routes![static_files]);
+        rocket = rocket.mount("/", routes![static_files]).attach(cors);
         rocket.launch().await?;
     }
 
     #[cfg(feature = "local-dev")]
     {
-        rocket = rocket.mount("/", routes![dev_mode_fallback]);
+        rocket = rocket.mount("/", routes![dev_mode_fallback]).attach(cors);
         rocket.launch().await?;
     }
 
