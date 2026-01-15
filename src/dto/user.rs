@@ -26,6 +26,13 @@ impl New {
     }
 }
 
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Login {
+    pub username: String,
+    pub password: String,
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Minimum {
@@ -40,4 +47,11 @@ impl From<crate::entity::user::Model> for Minimum {
             username: model.name,
         }
     }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthResponse {
+    pub user: Minimum,
+    pub access_token: String,
 }

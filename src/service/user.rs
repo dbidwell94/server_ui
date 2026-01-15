@@ -1,6 +1,7 @@
 use crate::dto;
 use crate::entity;
 use crate::utils::error_response;
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use rocket::{
     http::Status,
     request::{FromRequest, Outcome},
@@ -21,6 +22,12 @@ pub enum UserError {
     #[error("user with id {0} not found")]
     NotFound(i32),
 
+    #[error("user with username {0} not found")]
+    UsernameNotFound(String),
+
+    #[error("Invalid credentials")]
+    InvalidCredentials,
+
     #[error(transparent)]
     DbError(#[from] sea_orm::DbErr),
 }
@@ -31,6 +38,8 @@ impl<'r> Responder<'r, 'static> for UserError {
             UserError::DbNotFound => Status::InternalServerError,
             UserError::HashError => Status::InternalServerError,
             UserError::NotFound(_) => Status::NotFound,
+            UserError::UsernameNotFound(_) => Status::Unauthorized,
+            UserError::InvalidCredentials => Status::Unauthorized,
             UserError::DbError(_) => Status::InternalServerError,
         };
         error_response(self, status)
@@ -67,9 +76,32 @@ impl User {
         Ok(res.id)
     }
 
+    pub async fn find_by_id(&self, id: i32) -> Result<entity::user::Model, UserError> {
+        entity::user::Entity::find_by_id(id)
+            .one(&self.db)
+            .await?
+            .ok_or(UserError::NotFound(id))
+    }
+
     pub async fn get_user_by_id(&self, id: i32) -> Result<dto::user::Minimum, UserError> {
-        let user = entity::user::Entity::find_by_id(id).one(&self.db).await?;
-        Ok(user.map(Into::into).ok_or(UserError::NotFound(id))?)
+        let user = self.find_by_id(id).await?;
+        Ok(user.into())
+    }
+
+    pub async fn find_by_username(&self, username: &str) -> Result<entity::user::Model, UserError> {
+        entity::user::Entity::find()
+            .filter(entity::user::Column::Name.eq(username))
+            .one(&self.db)
+            .await?
+            .ok_or_else(|| UserError::UsernameNotFound(username.to_string()))
+    }
+
+    pub fn verify_password(&self, password: &str, hash: &str) -> Result<(), UserError> {
+        let parsed_hash = PasswordHash::new(hash).map_err(|_| UserError::HashError)?;
+
+        Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .map_err(|_| UserError::InvalidCredentials)
     }
 
     pub async fn has_admin(&self) -> Result<bool, UserError> {

@@ -33,3 +33,5 @@ sqlx = { version = "0.8", features = ["sqlite"] }
 # Authentication
 argon2 = "0.5"
 rand = "0.8"
+jsonwebtoken = "9.2"
+chrono = { version = "0.4", features = ["serde"] }

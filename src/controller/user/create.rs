@@ -1,15 +1,25 @@
-use rocket::{post, response::status::Created, serde::json::Json};
+use rocket::post;
 
-use crate::{controller, dto::user, service};
+use crate::{auth, dto::user, service};
 
 #[post("/create", data = "<new_user>")]
 pub async fn create_user(
-    new_user: Json<user::New>,
+    new_user: rocket::serde::json::Json<user::New>,
     user_service: service::user::User,
-) -> Result<Created<()>, controller::Error> {
+) -> Result<auth::response::AuthResponse, crate::controller::Error> {
     let created_id = user_service.new_user(new_user.0).await?;
 
-    let created_route = Created::new(format!("/api/user/{created_id}"));
+    // Fetch the created user
+    let user_model = user_service.find_by_id(created_id).await?;
 
-    Ok(created_route)
+    // Generate tokens
+    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone())
+        .map_err(|_| service::user::UserError::HashError)?;
+
+    Ok(auth::response::AuthResponse::new(
+        token_pair.access_token,
+        user_model.id,
+        user_model.name,
+        token_pair.refresh_token,
+    ))
 }

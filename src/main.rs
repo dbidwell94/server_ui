@@ -1,4 +1,5 @@
 mod controller;
+pub mod auth;
 pub mod db;
 pub mod dto;
 pub mod entity;
