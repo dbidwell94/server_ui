@@ -35,7 +35,6 @@ export default function Schemas() {
         setIsLoading(true);
         setError(null);
         const data = await getAllSchemas();
-        console.log(data);
         setSchemas(data);
       } catch (err) {
         const errorMessage =
@@ -122,7 +121,6 @@ export default function Schemas() {
 
       // Store in context (without editing ID for new schema)
       setSchema(schema);
-      setEditingSchemaId(null);
 
       // Navigate to editor
       navigate("/create-schema");

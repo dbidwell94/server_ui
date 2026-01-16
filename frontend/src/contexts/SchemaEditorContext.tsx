@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { option, type Option } from "@dbidwell94/ts-utils";
 import type { ServerConfig } from "../bindings";
 
 interface SchemaEditorContextType {
-  schema: ServerConfig | null;
-  editingSchemaId: number | null;
+  schema: Option<ServerConfig>;
+  editingSchemaId: Option<number>;
   setSchema: (schema: ServerConfig) => void;
-  setEditingSchemaId: (id: number | null) => void;
+  setEditingSchemaId: (id: number) => void;
   clearSchema: () => void;
 }
 
@@ -14,12 +15,22 @@ const SchemaEditorContext = createContext<SchemaEditorContextType | undefined>(
 );
 
 export function SchemaEditorProvider({ children }: { children: ReactNode }) {
-  const [schema, setSchema] = useState<ServerConfig | null>(null);
-  const [editingSchemaId, setEditingSchemaId] = useState<number | null>(null);
+  const [schema, setSchema] = useState<Option<ServerConfig>>(option.none());
+  const [editingSchemaId, setEditingSchemaId] = useState<Option<number>>(
+    option.none()
+  );
+
+  const handleSetSchema = (newSchema: ServerConfig) => {
+    setSchema(option.some(newSchema));
+  };
+
+  const handleSetEditingSchemaId = (id: number) => {
+    setEditingSchemaId(option.some(id));
+  };
 
   const clearSchema = () => {
-    setSchema(null);
-    setEditingSchemaId(null);
+    setSchema(option.none());
+    setEditingSchemaId(option.none());
   };
 
   return (
@@ -27,8 +38,8 @@ export function SchemaEditorProvider({ children }: { children: ReactNode }) {
       value={{
         schema,
         editingSchemaId,
-        setSchema,
-        setEditingSchemaId,
+        setSchema: handleSetSchema,
+        setEditingSchemaId: handleSetEditingSchemaId,
         clearSchema,
       }}
     >

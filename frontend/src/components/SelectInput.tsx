@@ -46,8 +46,8 @@ export default function SelectInput({
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         {placeholder && <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
+        {options.map((option, idx) => (
+          <option key={`${option.value}-${idx}`} value={option.value}>
             {option.displayName || option.value}
           </option>
         ))}

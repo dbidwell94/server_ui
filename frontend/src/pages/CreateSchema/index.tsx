@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import PageLayout from "../../components/PageLayout";
 import AddFieldButton from "./AddFieldButton";
 import FieldEditorModal from "./FieldEditorModal";
@@ -30,7 +29,6 @@ const DEFAULT_CONFIG: Omit<ServerConfig, "args"> = {
 };
 
 export default function CreateSchema() {
-  const location = useLocation();
   const {
     schema: contextSchema,
     editingSchemaId,
@@ -53,17 +51,20 @@ export default function CreateSchema() {
 
   // Load schema from context if provided
   useEffect(() => {
-    if (contextSchema) {
+    if (contextSchema.isSome()) {
+      const schemaValue = contextSchema.value;
       setConfig({
-        steamAppId: contextSchema.steamAppId,
-        executableName: contextSchema.executableName,
-        displayName: contextSchema.displayName,
-        schemaVersion: contextSchema.schemaVersion,
-        rules: contextSchema.rules,
-        commandBuilder: contextSchema.commandBuilder,
+        steamAppId: schemaValue.steamAppId,
+        executableName: schemaValue.executableName,
+        displayName: schemaValue.displayName,
+        schemaVersion: schemaValue.schemaVersion,
+        rules: schemaValue.rules,
+        commandBuilder: schemaValue.commandBuilder,
       });
-      setFields(contextSchema.args);
-      setCurrentEditingSchemaId(editingSchemaId);
+      setFields(schemaValue.args);
+      if (editingSchemaId.isSome()) {
+        setCurrentEditingSchemaId(editingSchemaId.value);
+      }
       // Clear context after loading
       clearSchema();
     }

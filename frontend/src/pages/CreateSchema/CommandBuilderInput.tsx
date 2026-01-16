@@ -23,7 +23,8 @@ export default function CommandBuilderInput({
     if (!inputRef.current) return;
 
     const cursorPos = inputRef.current.selectionStart || value.length;
-    const newValue = value.slice(0, cursorPos) + `{{${fieldName}}}` + value.slice(cursorPos);
+    const newValue =
+      value.slice(0, cursorPos) + `{{${fieldName}}}` + value.slice(cursorPos);
     onChange(newValue);
     setShowFieldDropdown(false);
 
@@ -31,7 +32,10 @@ export default function CommandBuilderInput({
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
-        inputRef.current.setSelectionRange(cursorPos + fieldName.length + 4, cursorPos + fieldName.length + 4);
+        inputRef.current.setSelectionRange(
+          cursorPos + fieldName.length + 4,
+          cursorPos + fieldName.length + 4
+        );
       }
     }, 0);
   };
@@ -42,7 +46,10 @@ export default function CommandBuilderInput({
   };
 
   const replaceField = (oldFieldName: string, newFieldName: string) => {
-    const newValue = value.replace(`{{${oldFieldName}}}`, `{{${newFieldName}}}`);
+    const newValue = value.replace(
+      `{{${oldFieldName}}}`,
+      `{{${newFieldName}}}`
+    );
     onChange(newValue);
   };
 
@@ -93,7 +100,9 @@ export default function CommandBuilderInput({
                           className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-slate-700 hover:text-white transition"
                         >
                           {field.label}
-                          <span className="text-xs text-gray-500 ml-2">({field.name})</span>
+                          <span className="text-xs text-gray-500 ml-2">
+                            ({field.name})
+                          </span>
                         </button>
                       ))}
                     </>
@@ -115,14 +124,18 @@ export default function CommandBuilderInput({
                           className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-slate-700 hover:text-white transition"
                         >
                           {field.displayName || field.name}
-                          <span className="text-xs text-gray-500 ml-2">({field.name})</span>
+                          <span className="text-xs text-gray-500 ml-2">
+                            ({field.name})
+                          </span>
                         </button>
                       ))}
                     </>
                   )}
 
                   {fields.length === 0 && staticFields.length === 0 && (
-                    <div className="px-4 py-2 text-sm text-gray-500">No fields available</div>
+                    <div className="px-4 py-2 text-sm text-gray-500">
+                      No fields available
+                    </div>
                   )}
                 </div>
               </div>
@@ -137,7 +150,7 @@ export default function CommandBuilderInput({
             <div className="flex flex-wrap gap-2">
               {fieldRefs.map((fieldName, idx) => (
                 <div
-                  key={idx}
+                  key={`fieldRef-${fieldName}-${idx}`}
                   className="inline-flex items-center gap-2 px-3 py-1 bg-blue-900/30 border border-blue-700 rounded text-sm text-blue-300"
                 >
                   <span className="font-mono">{`{{${fieldName}}}`}</span>
@@ -176,7 +189,9 @@ export default function CommandBuilderInput({
         {/* Preview */}
         <div className="p-3 bg-slate-700/50 rounded border border-slate-600">
           <p className="text-xs text-gray-400 mb-1">Preview:</p>
-          <p className="text-sm font-mono text-gray-200">{value || "(empty)"}</p>
+          <p className="text-sm font-mono text-gray-200">
+            {value || "(empty)"}
+          </p>
         </div>
       </div>
     </div>

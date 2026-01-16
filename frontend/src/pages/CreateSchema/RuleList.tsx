@@ -80,7 +80,7 @@ export default function RuleList({
     <div className="space-y-3">
       {fieldRules.map((rule, idx) => (
         <div
-          key={idx}
+          key={`rule-${rule.targetFieldName}-${rule.condition.fieldName}-${idx}`}
           className="p-4 bg-slate-800 rounded border border-slate-700"
         >
           <div className="mb-3">
