@@ -1,6 +1,12 @@
 import SelectInput from "../../components/SelectInput";
 import TextInput from "../../components/TextInput";
-import type { Condition, ConditionOperator, DynamicField } from "../../bindings";
+import type {
+  Condition,
+  ConditionOperator,
+  DynamicField,
+} from "../../bindings";
+import CheckboxInput from "../../components/CheckboxInput";
+import NumberInput from "../../components/NumberInput";
 
 interface RuleConditionBuilderProps {
   condition: Condition;
@@ -25,12 +31,9 @@ export default function RuleConditionBuilder({
   onChange,
   availableFields,
 }: RuleConditionBuilderProps) {
-  const selectedField = availableFields.find((f) => f.name === condition.fieldName);
-  const isEnumField = selectedField && selectedField.type === "enum";
-  const enumValues =
-    isEnumField && selectedField && selectedField.type === "enum"
-      ? (selectedField as Extract<DynamicField, { type: "enum" }>).values || []
-      : [];
+  const selectedField =
+    availableFields.find((f) => f.name === condition.fieldName) ??
+    availableFields[0];
 
   return (
     <div className="space-y-4 p-4 bg-slate-800 rounded border border-slate-700">
@@ -42,8 +45,13 @@ export default function RuleConditionBuilder({
           name="conditionField"
           label="Field"
           value={condition.fieldName}
-          onChange={(e) => onChange({ ...condition, fieldName: e.target.value })}
-          options={availableFields.map((f) => ({ value: f.name, label: f.displayName || f.name }))}
+          onChange={(e) =>
+            onChange({ ...condition, fieldName: e.target.value })
+          }
+          options={availableFields.map((f) => ({
+            value: f.name,
+            label: f.displayName || f.name,
+          }))}
         />
 
         <SelectInput
@@ -51,34 +59,83 @@ export default function RuleConditionBuilder({
           name="conditionOperator"
           label="Operator"
           value={condition.operator}
-          onChange={(e) => onChange({ ...condition, operator: e.target.value as ConditionOperator })}
+          onChange={(e) =>
+            onChange({
+              ...condition,
+              operator: e.target.value as ConditionOperator,
+            })
+          }
           options={OPERATORS}
         />
 
-        {/* Value input - dropdown for enum, text for others */}
-        {isEnumField && enumValues && enumValues.length > 0 ? (
-          <SelectInput
-            id="condition-value"
-            name="conditionValue"
-            label="Value"
-            value={condition.value}
-            onChange={(e) => onChange({ ...condition, value: e.target.value })}
-            options={[
-              { value: "", label: "Select a value" },
-              ...enumValues.map((v) => ({ value: v, label: v })),
-            ]}
-          />
-        ) : (
-          <TextInput
-            id="condition-value"
-            name="conditionValue"
-            label="Value"
-            value={condition.value}
-            onChange={(e) => onChange({ ...condition, value: e.target.value })}
-            placeholder="Enter value to compare"
-          />
-        )}
+        {getDynamicFieldByType(selectedField, condition, onChange)}
       </div>
     </div>
   );
+}
+
+function getDynamicFieldByType(
+  field: DynamicField,
+  condition: Condition,
+  onChange: (condition: Condition) => void
+) {
+  switch (field.type) {
+    case "enum": {
+      return (
+        <SelectInput
+          id="condition-value"
+          label="Value"
+          name="conditionValue"
+          onChange={(e) => onChange({ ...condition, value: e.target.value })}
+          value={condition.value}
+          options={[
+            ...(field.values
+              ? field.values.map((v) => ({ value: v, label: v }))
+              : [{ value: "", label: "No values available" }]),
+          ]}
+        />
+      );
+    }
+    case "flag":
+    case "boolean": {
+      return (
+        <CheckboxInput
+          id="condition-value"
+          label="Value"
+          name="conditionValue"
+          checked={condition.value === "true"}
+          onChange={(e) =>
+            onChange({
+              ...condition,
+              value: e.target.checked ? "true" : "false",
+            })
+          }
+        />
+      );
+    }
+    case "number": {
+      return (
+        <NumberInput
+          id="condition-value"
+          label="Value"
+          name="conditionValue"
+          min={field.min}
+          max={field.max}
+          value={condition.value}
+          onChange={(e) => onChange({ ...condition, value: e.target.value })}
+        />
+      );
+    }
+    default: {
+      return (
+        <TextInput
+          id="condition-value"
+          label="Value"
+          name="conditionValue"
+          value={condition.value}
+          onChange={(e) => onChange({ ...condition, value: e.target.value })}
+        />
+      );
+    }
+  }
 }

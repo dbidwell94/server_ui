@@ -40,7 +40,6 @@ export default function FieldDisplay({
             label={label}
             checked={false}
             onChange={() => {}}
-            disabled
           />
         );
 
@@ -53,7 +52,6 @@ export default function FieldDisplay({
             label={label}
             value=""
             onChange={() => {}}
-            disabled
             options={[
               { value: "", label: "Select an option" },
               ...(enumField.values && enumField.values.length > 0
@@ -72,7 +70,6 @@ export default function FieldDisplay({
             label={label}
             checked={false}
             onChange={() => {}}
-            disabled
           />
         );
 
@@ -85,7 +82,6 @@ export default function FieldDisplay({
             value=""
             onChange={() => {}}
             placeholder={field.default || "Enter a number"}
-            disabled
           />
         );
 
@@ -98,7 +94,6 @@ export default function FieldDisplay({
             value=""
             onChange={() => {}}
             placeholder={field.default || `e.g., ${field.name}`}
-            disabled
           />
         );
     }

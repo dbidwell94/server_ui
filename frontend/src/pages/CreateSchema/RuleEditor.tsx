@@ -29,7 +29,7 @@ export default function RuleEditor({
   existingRule,
 }: RuleEditorProps) {
   const [rule, setRule] = useState<ConditionalRule>(
-    existingRule || {
+    existingRule ?? {
       ...DEFAULT_RULE,
       targetFieldName: targetField.name,
     }
