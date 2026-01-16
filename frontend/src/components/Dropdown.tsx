@@ -41,7 +41,7 @@ export default function Dropdown({
         {trigger}
       </button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700 z-50 overflow-hidden">
           {items.map((item, index) => {
             
             return item.element ? (
@@ -54,7 +54,7 @@ export default function Dropdown({
                 onClick={item.onClick}
                 className={
                   item.className ||
-                  `flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 first:rounded-t-lg last:rounded-b-lg transition font-medium cursor-pointer`
+                  `flex items-center gap-3 w-full text-left px-4 py-3 text-gray-300 hover:bg-slate-700 hover:text-white first:rounded-t-lg last:rounded-b-lg transition font-medium cursor-pointer`
                 }
               >
                 {item.icon && <span>{item.icon}</span>}

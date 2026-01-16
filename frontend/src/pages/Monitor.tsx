@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import Navbar from "../components/Navbar";
 import TerminalView from "../components/TerminalView";
 import type { LogEntry } from "../components/TerminalView";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Monitor() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [selectedServer, setSelectedServer] = useState<string>("all");
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const logIdRef = useRef(0);
+  const {accessToken} = useAuth();
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
@@ -16,7 +18,7 @@ export default function Monitor() {
 
   // Connect to server-sent events for logs
   useEffect(() => {
-    const evtSource = new EventSource("/api/steamcmd/stdout");
+    const evtSource = new EventSource(`/api/steamcmd/stdout?token=${accessToken}`);
 
     evtSource.onmessage = (evt) => {
       try {
@@ -55,27 +57,27 @@ export default function Monitor() {
   const servers = Array.from(new Set(logs.map((log) => log.source)));
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
       <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Server Monitor</h1>
-          <p className="text-gray-600">View real-time logs from your servers</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Server Monitor</h1>
+          <p className="text-gray-300">View real-time logs from your servers</p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-slate-800 rounded-lg shadow p-6 mb-8 border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="server" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="server" className="block text-sm font-medium text-gray-300 mb-2">
                 Server
               </label>
               <select
                 id="server"
                 value={selectedServer}
                 onChange={(e) => setSelectedServer(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-slate-600 bg-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="all">All Servers</option>
                 {servers.map((server) => (
@@ -87,14 +89,14 @@ export default function Monitor() {
             </div>
 
             <div>
-              <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="level" className="block text-sm font-medium text-gray-300 mb-2">
                 Log Level
               </label>
               <select
                 id="level"
                 value={selectedLevel}
                 onChange={(e) => setSelectedLevel(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-slate-600 bg-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="all">All Levels</option>
                 <option value="info">Info</option>
@@ -124,10 +126,10 @@ export default function Monitor() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 px-4">
+      <footer className="bg-slate-900 text-gray-300 py-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <p>
-            &copy; 2026 Devin Bidwell - Server UI. Built with Rust and React.
+            &copy; 2026 Devin Bidwell - Deliverance. Built with Rust and React.
           </p>
         </div>
       </footer>

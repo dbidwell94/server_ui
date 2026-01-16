@@ -53,14 +53,14 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-slate-900 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo with Status Indicator */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <span className={`w-3 h-3 rounded-full ${getStatusColor()} animate-pulse`} />
-                <h1 className="text-2xl font-bold text-gray-900">Server UI</h1>
+                <h1 className="text-2xl font-bold text-white">Deliverance</h1>
               </div>
             </Link>
 
@@ -68,7 +68,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-8">
               <Link
                 to="/about"
-                className="text-gray-700 hover:text-blue-600 font-medium transition"
+                className="text-gray-300 hover:text-white font-medium transition"
               >
                 About
               </Link>
@@ -95,7 +95,7 @@ export default function Navbar() {
             <div className="md:hidden">
               <button
                 onClick={toggleMenu}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:bg-slate-800"
               >
                 {isOpen ? (
                   <XMarkIcon className="h-6 w-6" />
@@ -111,7 +111,8 @@ export default function Navbar() {
       {/* Mobile Sidebar Menu */}
       {isOpen && (
         <div
-          className={`fixed top-0 left-0 h-screen w-64 bg-white shadow-xl z-50 md:hidden ${
+          className={`fixed top-0 left-0 h-screen w-64 bg-slate-900 shadow-xl z-50 md:hidden ${
+
             isClosing ? "animate-slide-out" : "animate-slide-in"
           }`}
         >
@@ -121,21 +122,21 @@ export default function Navbar() {
               onClick={closeMenu}
               className="absolute top-4 right-4 p-2 rounded-md hover:bg-gray-100"
             >
-              <XMarkIcon className="h-6 w-6 text-gray-700" />
+              <XMarkIcon className="h-6 w-6 text-gray-300" />
             </button>
 
             {/* Menu Items */}
             <div className="mt-8 space-y-4">
               <Link
                 to="/about"
-                className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg font-medium transition"
+                className="block px-4 py-3 text-gray-300 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition"
                 onClick={closeMenu}
               >
                 About
               </Link>
               {isAuthenticated && user ? (
                 <div className="space-y-4">
-                  <div className="px-4 py-3 text-gray-700 font-medium">
+                  <div className="px-4 py-3 text-gray-300 font-medium">
                     Signed in as: {user.username}
                   </div>
                   <button

@@ -3,32 +3,33 @@
 
 export const buttonClasses = {
   primary:
-    "block w-full text-center font-semibold py-2 px-4 rounded transition duration-200 bg-blue-600 hover:bg-blue-700 text-white",
+    "block w-full text-center font-semibold py-2 px-4 rounded transition duration-200 bg-indigo-600 hover:bg-indigo-700 text-white",
   success:
-    "block w-full text-center font-semibold py-2 px-4 rounded transition duration-200 bg-green-600 hover:bg-green-700 text-white",
+    "block w-full text-center font-semibold py-2 px-4 rounded transition duration-200 bg-emerald-600 hover:bg-emerald-700 text-white",
   secondary:
-    "block w-full text-center font-semibold py-2 px-4 rounded transition duration-200 bg-purple-600 hover:bg-purple-700 text-white",
+    "block w-full text-center font-semibold py-2 px-4 rounded transition duration-200 bg-slate-600 hover:bg-slate-700 text-white",
 } as const;
 
 export const containerClasses = {
   primary:
-    "min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center",
+    "min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 flex items-center justify-center",
   secondary:
-    "min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center",
+    "min-h-screen bg-gradient-to-br from-slate-900 to-gray-800 flex items-center justify-center",
   tertiary:
-    "min-h-screen bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center",
+    "min-h-screen bg-gradient-to-br from-gray-800 to-slate-900 flex items-center justify-center",
 } as const;
 
 export const cardClasses = {
-  default: "bg-white rounded-lg shadow-xl p-8 max-w-md",
+  default:
+    "bg-slate-800 rounded-lg shadow-xl p-8 max-w-md border border-slate-700",
 } as const;
 
 export const textClasses = {
-  heading: "text-4xl font-bold text-gray-800 mb-4",
+  heading: "text-4xl font-bold text-white mb-4",
   largeHeading: "text-5xl md:text-6xl font-bold text-white mb-6",
-  subtitle: "text-xl md:text-2xl text-white/90 mb-8",
-  description: "text-gray-600 mb-6",
-  small: "text-sm text-gray-500",
+  subtitle: "text-xl md:text-2xl text-gray-200 mb-8",
+  description: "text-gray-300 mb-6",
+  small: "text-sm text-gray-400",
 } as const;
 
 export const statusClasses = {
@@ -41,8 +42,8 @@ export const statusClasses = {
 } as const;
 
 export const cardClasses2 = {
-  elevated: "bg-white rounded-lg shadow-lg p-6 border border-gray-200",
-  subtle: "bg-gray-50 rounded-lg p-6 border border-gray-100",
+  elevated: "bg-slate-800 rounded-lg shadow-lg p-6 border border-slate-700",
+  subtle: "bg-slate-700 rounded-lg p-6 border border-slate-600",
 } as const;
 
 export const gradientOverlay =

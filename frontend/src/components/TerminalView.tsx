@@ -115,7 +115,7 @@ export default function TerminalView({
     return (
         <div className={`bg-black rounded-lg shadow overflow-hidden flex flex-col ${height} border border-gray-800`}>
             <div className="bg-gray-900 px-6 py-3 border-b border-gray-800">
-                <p className="text-xs font-mono text-gray-400">
+                <p className="text-xs font-mono text-gray-300">
                     $ {title} — {mergedLogs.length} lines
                 </p>
             </div>
@@ -143,7 +143,7 @@ export default function TerminalView({
                                             <span className="text-gray-600 flex-shrink-0 select-none">
                                                 [{new Date(log.timestamp).toLocaleTimeString()}]
                                             </span>
-                                            <span className="text-gray-500 flex-shrink-0 select-none">
+                                            <span className="text-gray-400 flex-shrink-0 select-none">
                                                 {log.source}
                                             </span>
                                             <span className={`${getTextColor(log.level)} break-words flex-1 flex items-center`}>
