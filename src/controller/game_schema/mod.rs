@@ -1,6 +1,9 @@
 mod create;
 mod get_by_id;
 mod json_by_id;
+mod list;
+mod update_schema;
+mod validate;
 
 use rocket::{routes, Route};
 
@@ -12,7 +15,10 @@ pub fn get_all_routes() -> Vec<(&'static str, Vec<Route>)> {
         routes![
             create::create,
             get_by_id::get_schema_metadata_by_id,
-            json_by_id::get_schema_json_by_id
+            json_by_id::get_schema_json_by_id,
+            list::get_server_schemas,
+            update_schema::update_schema,
+            validate::validate_schema,
         ],
     )]
 }

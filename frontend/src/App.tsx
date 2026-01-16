@@ -2,12 +2,14 @@ import { Routes, Route } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SchemaEditorProvider } from "./contexts/SchemaEditorContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import Monitor from "./pages/Monitor";
 import CreateSchema from "./pages/CreateSchema";
+import Schemas from "./pages/Schemas";
 import OnboardingGate from "./components/OnboardingGate";
 import AuthenticatedRoute from "./components/AuthenticatedRoute";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -27,7 +29,14 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
 
       {/* Redirect from base path based on admin status */}
-      <Route path="/" element={<OnboardingGate><Home /></OnboardingGate>} />
+      <Route
+        path="/"
+        element={
+          <OnboardingGate>
+            <Home />
+          </OnboardingGate>
+        }
+      />
 
       {/* Routes that are public, but redirect to onboarding if no admin exists */}
       <Route
@@ -64,6 +73,14 @@ function AppRoutes() {
           </AuthenticatedRoute>
         }
       />
+      <Route
+        path="/schemas"
+        element={
+          <AuthenticatedRoute>
+            <Schemas />
+          </AuthenticatedRoute>
+        }
+      />
     </Routes>
   );
 }
@@ -72,7 +89,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppRoutes />
+        <SchemaEditorProvider>
+          <AppRoutes />
+        </SchemaEditorProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

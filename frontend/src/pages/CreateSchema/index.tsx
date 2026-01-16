@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import PageLayout from "../../components/PageLayout";
 import AddFieldButton from "./AddFieldButton";
 import FieldEditorModal from "./FieldEditorModal";
@@ -6,8 +7,18 @@ import FieldDisplay from "./FieldDisplay";
 import StaticConfig from "./StaticConfig";
 import CommandBuilderInput from "./CommandBuilderInput";
 import Button from "../../components/Button";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import type { DynamicField, ServerConfig, ConditionalRule } from "../../bindings";
+import {
+  ArrowDownTrayIcon,
+  CheckIcon,
+  CloudArrowUpIcon,
+} from "@heroicons/react/24/outline";
+import type {
+  DynamicField,
+  ServerConfig,
+  ConditionalRule,
+} from "../../bindings";
+import { saveSchema, updateSchema } from "../../lib/gameSchemaApi";
+import { useSchemaEditor } from "../../contexts/SchemaEditorContext";
 
 const DEFAULT_CONFIG: Omit<ServerConfig, "args"> = {
   steamAppId: 0,
@@ -19,15 +30,49 @@ const DEFAULT_CONFIG: Omit<ServerConfig, "args"> = {
 };
 
 export default function CreateSchema() {
-  const [config, setConfig] = useState<Omit<ServerConfig, "args">>(DEFAULT_CONFIG);
+  const location = useLocation();
+  const {
+    schema: contextSchema,
+    editingSchemaId,
+    clearSchema,
+  } = useSchemaEditor();
+  const [config, setConfig] =
+    useState<Omit<ServerConfig, "args">>(DEFAULT_CONFIG);
   const [fields, setFields] = useState<DynamicField[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [_dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"fields" | "command">("fields");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [currentEditingSchemaId, setCurrentEditingSchemaId] = useState<
+    number | null
+  >(null);
 
-  const handleStaticChange = (key: keyof Omit<ServerConfig, "args">, value: any) => {
+  // Load schema from context if provided
+  useEffect(() => {
+    if (contextSchema) {
+      setConfig({
+        steamAppId: contextSchema.steamAppId,
+        executableName: contextSchema.executableName,
+        displayName: contextSchema.displayName,
+        schemaVersion: contextSchema.schemaVersion,
+        rules: contextSchema.rules,
+        commandBuilder: contextSchema.commandBuilder,
+      });
+      setFields(contextSchema.args);
+      setCurrentEditingSchemaId(editingSchemaId);
+      // Clear context after loading
+      clearSchema();
+    }
+  }, [contextSchema, editingSchemaId, clearSchema]);
+
+  const handleStaticChange = (
+    key: keyof Omit<ServerConfig, "args">,
+    value: any
+  ) => {
     setConfig((prev) => ({
       ...prev,
       [key]: value,
@@ -111,7 +156,7 @@ export default function CreateSchema() {
     const fullConfig: ServerConfig = {
       ...config,
       args: fields,
-      commandBuilder: config.commandBuilder 
+      commandBuilder: config.commandBuilder
         ? {
             structure: config.commandBuilder.structure[0]
               .split(/\s+/)
@@ -127,6 +172,61 @@ export default function CreateSchema() {
     link.download = `${config.displayName || "server"}-config.json`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleSaveSchema = async () => {
+    setSaveError(null);
+    setSaveSuccess(false);
+    setIsSaving(true);
+
+    try {
+      // Validate required fields
+      if (!config.displayName.trim()) {
+        throw new Error("Server Display Name is required");
+      }
+      if (!config.executableName.trim()) {
+        throw new Error("Executable Name is required");
+      }
+      if (config.steamAppId <= 0) {
+        throw new Error("Steam App ID must be greater than 0");
+      }
+
+      // Build the complete config
+      const fullConfig: ServerConfig = {
+        ...config,
+        args: fields,
+        commandBuilder: config.commandBuilder
+          ? {
+              structure: config.commandBuilder.structure[0]
+                .split(/\s+/)
+                .filter((part) => part.length > 0),
+            }
+          : null,
+      };
+
+      // Save to server (create or update)
+      if (currentEditingSchemaId) {
+        await updateSchema(currentEditingSchemaId, fullConfig);
+        console.log(
+          "Schema updated successfully with ID:",
+          currentEditingSchemaId
+        );
+      } else {
+        const result = await saveSchema(fullConfig);
+        console.log("Schema saved successfully with ID:", result.id);
+      }
+
+      setSaveSuccess(true);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save schema";
+      setSaveError(errorMessage);
+      console.error("Error saving schema:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -189,9 +289,8 @@ export default function CreateSchema() {
                 onChange={(value) => {
                   setConfig((prev) => ({
                     ...prev,
-                    commandBuilder: value.length > 0 
-                      ? { structure: [value] } 
-                      : null,
+                    commandBuilder:
+                      value.length > 0 ? { structure: [value] } : null,
                   }));
                 }}
                 fields={fields}
@@ -205,15 +304,41 @@ export default function CreateSchema() {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-4">
+            {saveError && (
+              <div className="text-red-400 text-sm py-2 px-4 bg-red-900/20 rounded-lg">
+                {saveError}
+              </div>
+            )}
+            {saveSuccess && (
+              <div className="text-green-400 text-sm py-2 px-4 bg-green-900/20 rounded-lg flex items-center gap-2">
+                <CheckIcon className="h-4 w-4" />
+                Schema saved successfully!
+              </div>
+            )}
             <Button
               onClick={handleExportJSON}
               variant="primary"
               maxWidth={false}
               className="flex items-center gap-2"
+              disabled={isSaving}
             >
               <ArrowDownTrayIcon className="h-4 w-4" />
               Export Config
+            </Button>
+            <Button
+              onClick={handleSaveSchema}
+              variant="primary"
+              maxWidth={false}
+              className="flex items-center gap-2"
+              disabled={isSaving}
+            >
+              <CloudArrowUpIcon className="h-4 w-4" />
+              {isSaving
+                ? "Saving..."
+                : currentEditingSchemaId
+                  ? "Update Schema"
+                  : "Save Schema"}
             </Button>
           </div>
         </div>
@@ -230,7 +355,9 @@ export default function CreateSchema() {
         allFields={fields}
         existingRules={
           editingIndex !== null
-            ? config.rules.filter((r) => r.targetFieldName === fields[editingIndex].name)
+            ? config.rules.filter(
+                (r) => r.targetFieldName === fields[editingIndex].name
+              )
             : []
         }
       />

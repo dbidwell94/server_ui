@@ -1,4 +1,9 @@
-import { ChevronDownIcon, RectangleStackIcon, ArrowLeftStartOnRectangleIcon, DocumentPlusIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  RectangleStackIcon,
+  ArrowLeftStartOnRectangleIcon,
+  FolderOpenIcon,
+} from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import Dropdown from "./Dropdown";
 import type { User } from "../contexts/AuthContext";
@@ -30,17 +35,17 @@ export default function UserDropdown({
       }
       items={[
         {
-          label: "Create Schema",
+          label: "Schemas",
           onClick: onToggle,
           className:
             "w-full text-left px-4 py-3 text-gray-300 hover:bg-slate-700 hover:text-white rounded-lg transition font-medium cursor-pointer",
           element: (
             <Link
-              to="/create-schema"
+              to="/schemas"
               className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-300 hover:bg-slate-700 hover:text-white transition font-medium"
             >
-              <DocumentPlusIcon className="h-4 w-4" />
-              Create Schema
+              <FolderOpenIcon className="h-4 w-4" />
+              Schemas
             </Link>
           ),
         },

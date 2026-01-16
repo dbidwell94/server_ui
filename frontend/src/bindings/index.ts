@@ -14,3 +14,4 @@ export * from "./NumberConfig";
 export * from "./ServerConfig";
 export * from "./StaticConfig";
 export * from "./StringConfig";
+export * from "./SchemaMetadata";
