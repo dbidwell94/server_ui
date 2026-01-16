@@ -1,5 +1,6 @@
 export * from "./ArgumentType";
 export * from "./AuthResponse";
+export * from "./CommandBuilder";
 export * from "./Condition";
 export * from "./ConditionOperator";
 export * from "./ConditionalRule";

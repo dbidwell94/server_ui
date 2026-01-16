@@ -14,6 +14,7 @@ const DEFAULT_CONFIG: Omit<ServerConfig, "args"> = {
   displayName: "",
   schemaVersion: "1.0.0",
   rules: [],
+  commandBuilder: null,
 };
 
 export default function CreateSchema() {
