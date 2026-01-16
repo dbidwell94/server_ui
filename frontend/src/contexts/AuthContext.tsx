@@ -1,11 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import apiClient, { setAccessToken } from "../lib/api";
+import type { Minimum as User } from "../bindings";
 
-export interface User {
-  id: number;
-  username: string;
-}
+export type { User };
 
 interface AuthContextType {
   user: User | null;

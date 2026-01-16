@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { EllipsisVerticalIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
-import type { DynamicField } from "./types";
+import type { DynamicField } from "../../bindings";
 
 interface FieldDisplayProps {
   field: DynamicField;
@@ -40,7 +40,8 @@ export default function FieldDisplay({
           </div>
         );
 
-      case "enum":
+      case "enum": {
+        const enumField = field as Extract<DynamicField, { type: "enum" }>;
         return (
           <div>
             <label htmlFor={field.name} className="block text-sm font-medium text-gray-300 mb-2">
@@ -52,7 +53,7 @@ export default function FieldDisplay({
               className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
             >
               <option value="">Select an option</option>
-              {field.enumConfig?.values.map((value) => (
+              {enumField.values.map((value: string) => (
                 <option key={value} value={value}>
                   {value}
                 </option>
@@ -60,6 +61,7 @@ export default function FieldDisplay({
             </select>
           </div>
         );
+      }
 
       case "flag":
         return (

@@ -1,6 +1,6 @@
 import TextInput from "../../components/TextInput";
 import Card from "../../components/Card";
-import type { ServerConfig } from "./types";
+import type { ServerConfig } from "../../bindings";
 
 interface StaticConfigFormProps {
   config: ServerConfig;

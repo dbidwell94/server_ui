@@ -6,7 +6,7 @@ import SelectInput from "../../components/SelectInput";
 import CheckboxInput from "../../components/CheckboxInput";
 import Button from "../../components/Button";
 import TypeSpecificConfig from "./TypeSpecificConfig";
-import type { DynamicField, ArgumentType } from "./types";
+import type { DynamicField } from "../../bindings";
 
 interface FieldEditorModalProps {
   isOpen: boolean;
@@ -15,18 +15,18 @@ interface FieldEditorModalProps {
   initialField?: DynamicField;
 }
 
-const DEFAULT_FIELD: DynamicField = {
+const DEFAULT_FIELD: Extract<DynamicField, { type: "string" }> = {
   name: "",
   flag: "",
   useEquals: false,
   type: "string",
-  stringConfig: {},
-  numberConfig: {},
-  enumConfig: { values: [] },
-  default: "",
+  default: null,
   required: false,
   description: "",
-  displayName: "",
+  displayName: null,
+  pattern: null,
+  minLength: null,
+  maxLength: null,
 };
 
 export default function FieldEditorModal({
@@ -48,6 +48,10 @@ export default function FieldEditorModal({
       ...prev,
       [key]: value,
     }));
+  };
+
+  const handleTypeSpecificChange = (updatedField: DynamicField) => {
+    setField(updatedField);
   };
 
   const handleSave = () => {
@@ -101,7 +105,7 @@ export default function FieldEditorModal({
               </label>
               <select
                 value={field.type}
-                onChange={(e) => handleChange("type", e.target.value as ArgumentType)}
+                onChange={(e) => handleChange("type", e.target.value)}
                 className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600 hover:border-slate-500 focus:border-blue-500 outline-none transition"
               >
                 <option value="string">String</option>
@@ -122,30 +126,36 @@ export default function FieldEditorModal({
                   checked={field.default === "true"}
                   onChange={(e) => handleChange("default", e.target.checked ? "true" : "")}
                 />
-              ) : field.type === "enum" ? (
-                <SelectInput
-                  id="field-default-enum"
-                  name="fieldDefaultEnum"
-                  label="Default Value"
-                  value={field.default || ""}
-                  onChange={(e) => handleChange("default", e.target.value)}
-                  options={[
-                    { value: "", label: "None" },
-                    ...(field.enumConfig?.values.map((val) => ({ value: val, label: val })) || []),
-                  ]}
-                />
-              ) : field.type === "number" ? (
-                <NumberInput
-                  id="field-default-number"
-                  name="fieldDefaultNumber"
-                  label="Default Value"
-                  value={field.default || ""}
-                  onChange={(e) => handleChange("default", e.target.value)}
-                  min={field.numberConfig?.min}
-                  max={field.numberConfig?.max}
-                  placeholder="Optional"
-                />
-              ) : (
+              ) : field.type === "enum" ? (() => {
+                const enumField = field as Extract<DynamicField, { type: "enum" }>;
+                return (
+                  <SelectInput
+                    id="field-default-enum"
+                    name="fieldDefaultEnum"
+                    label="Default Value"
+                    value={field.default || ""}
+                    onChange={(e) => handleChange("default", e.target.value)}
+                    options={[
+                      { value: "", label: "None" },
+                      ...enumField.values.map((val: string) => ({ value: val, label: val })),
+                    ]}
+                  />
+                );
+              })() : field.type === "number" ? (() => {
+                const numberField = field as Extract<DynamicField, { type: "number" }>;
+                return (
+                  <NumberInput
+                    id="field-default-number"
+                    name="fieldDefaultNumber"
+                    label="Default Value"
+                    value={field.default || ""}
+                    onChange={(e) => handleChange("default", e.target.value)}
+                    min={numberField.min ?? undefined}
+                    max={numberField.max ?? undefined}
+                    placeholder="Optional"
+                  />
+                );
+              })() : (
                 <TextInput
                   id="field-default"
                   name="fieldDefault"
@@ -177,7 +187,7 @@ export default function FieldEditorModal({
             />
           </div>
 
-          <TypeSpecificConfig field={field} onChange={handleChange} />
+          <TypeSpecificConfig field={field} onChange={handleTypeSpecificChange} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <CheckboxInput

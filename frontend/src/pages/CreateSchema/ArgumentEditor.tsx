@@ -3,7 +3,7 @@ import TextInput from "../../components/TextInput";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import TypeSpecificConfig from "./TypeSpecificConfig";
-import type { DynamicField, ArgumentType } from "./types";
+import type { DynamicField } from "../../bindings";
 
 interface ArgumentEditorProps {
   field: DynamicField;
@@ -17,6 +17,11 @@ export default function ArgumentEditor({
   onAddField,
 }: ArgumentEditorProps) {
   const [isPreview, setIsPreview] = useState(false);
+
+  const handleTypeSpecificChange = (updatedField: DynamicField) => {
+    // Convert the full field update back to the onChange format
+    onChange("type", updatedField as any);
+  };
 
   const renderFieldPreview = () => {
     const label = field.displayName || field.name;
@@ -39,7 +44,8 @@ export default function ArgumentEditor({
           </div>
         );
 
-      case "enum":
+      case "enum": {
+        const enumField = field as Extract<DynamicField, { type: "enum" }>;
         return (
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -51,7 +57,7 @@ export default function ArgumentEditor({
               disabled
             >
               <option value="">Select an option</option>
-              {field.enumConfig?.values.map((value) => (
+              {enumField.values.map((value: string) => (
                 <option key={value} value={value}>
                   {value}
                 </option>
@@ -59,6 +65,7 @@ export default function ArgumentEditor({
             </select>
           </div>
         );
+      }
 
       case "flag":
         return (
@@ -178,7 +185,7 @@ export default function ArgumentEditor({
           </label>
           <select
             value={field.type}
-            onChange={(e) => onChange("type", e.target.value as ArgumentType)}
+            onChange={(e) => onChange("type", e.target.value)}
             className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600 hover:border-slate-500 focus:border-blue-500 outline-none transition"
           >
             <option value="string">String</option>
@@ -226,7 +233,7 @@ export default function ArgumentEditor({
       </div>
 
       {/* Type-specific configuration */}
-      <TypeSpecificConfig field={field} onChange={onChange} />
+      <TypeSpecificConfig field={field} onChange={handleTypeSpecificChange} />
 
       <div className="flex flex-wrap gap-6 mb-6">
         <label className="flex items-center gap-2 text-gray-300 cursor-pointer">

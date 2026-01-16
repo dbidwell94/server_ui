@@ -1,6 +1,6 @@
 import TextInput from "../../components/TextInput";
 import NumberInput from "../../components/NumberInput";
-import type { ServerConfig } from "./types";
+import type { ServerConfig } from "../../bindings";
 
 interface StaticConfigProps {
   config: Omit<ServerConfig, "args">;
