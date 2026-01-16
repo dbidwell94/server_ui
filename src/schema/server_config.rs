@@ -271,7 +271,7 @@ pub struct ServerConfig {
 #[ts(export)]
 pub struct StaticConfig {
     /// Steam App ID for this game
-    pub steam_app_id: u32,
+    pub steam_app_id: i32,
 
     /// Name of the executable file (without path)
     pub executable_name: String,
@@ -290,7 +290,7 @@ fn default_schema_version() -> String {
 
 impl ServerConfig {
     /// Creates a new server config with static config and empty dynamic fields
-    pub fn new(steam_app_id: u32, executable_name: String, display_name: String) -> Self {
+    pub fn new(steam_app_id: i32, executable_name: String, display_name: String) -> Self {
         Self {
             static_config: StaticConfig {
                 steam_app_id,

@@ -1,3 +1,4 @@
+mod game_schema;
 mod health;
 mod steamcmd;
 mod user;
@@ -12,6 +13,7 @@ pub fn get_all_routes() -> Vec<(&'static str, Vec<Route>)> {
 
     routes.extend(user::get_all_routes());
     routes.extend(steamcmd::get_all_routes());
+    routes.extend(game_schema::get_all_routes());
 
     routes
 }
@@ -23,6 +25,9 @@ pub enum Error {
 
     #[error(transparent)]
     SteamCMD(#[from] crate::state::steamcmd::SteamCmdError),
+
+    #[error(transparent)]
+    GameSchema(#[from] crate::service::game_schema::GameSchemaError),
 }
 
 impl<'r> Responder<'r, 'static> for Error {
@@ -30,6 +35,7 @@ impl<'r> Responder<'r, 'static> for Error {
         match self {
             Error::User(e) => e.respond_to(req),
             Error::SteamCMD(e) => e.respond_to(req),
+            Error::GameSchema(e) => e.respond_to(req),
         }
     }
 }

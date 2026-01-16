@@ -22,25 +22,24 @@ pub enum UserError {
     #[error("user with id {0} not found")]
     NotFound(i32),
 
-    #[error("user with username {0} not found")]
+    #[error("User not found")]
     UsernameNotFound(String),
 
     #[error("Invalid credentials")]
     InvalidCredentials,
 
-    #[error(transparent)]
+    #[error("A database error occurred. Please review the logs for more details.")]
     DbError(#[from] sea_orm::DbErr),
 }
 
 impl<'r> Responder<'r, 'static> for UserError {
     fn respond_to(self, _: &'r rocket::Request<'_>) -> rocket::response::Result<'static> {
         let status = match self {
-            UserError::DbNotFound => Status::InternalServerError,
-            UserError::HashError => Status::InternalServerError,
+            UserError::DbNotFound | UserError::DbError(_) | UserError::HashError => {
+                Status::InternalServerError
+            }
             UserError::NotFound(_) => Status::NotFound,
-            UserError::UsernameNotFound(_) => Status::Unauthorized,
-            UserError::InvalidCredentials => Status::Unauthorized,
-            UserError::DbError(_) => Status::InternalServerError,
+            UserError::UsernameNotFound(_) | UserError::InvalidCredentials => Status::Unauthorized,
         };
         error_response(self, status)
     }
