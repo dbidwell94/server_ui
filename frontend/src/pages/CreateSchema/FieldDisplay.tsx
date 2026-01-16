@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { EllipsisVerticalIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import TextInput from "../../components/TextInput";
+import SelectInput from "../../components/SelectInput";
+import NumberInput from "../../components/NumberInput";
+import CheckboxInput from "../../components/CheckboxInput";
 import type { DynamicField } from "../../bindings";
 
 interface FieldDisplayProps {
@@ -25,85 +29,77 @@ export default function FieldDisplay({
 }: FieldDisplayProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const label = field.displayName || field.name;
-  const isRequired = field.required ? "*" : "";
 
   const renderField = () => {
     switch (field.type) {
       case "boolean":
         return (
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id={field.name} className="w-4 h-4" />
-            <label htmlFor={field.name} className="text-gray-300">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-          </div>
+          <CheckboxInput
+            id={field.name}
+            name={field.name}
+            label={label}
+            checked={false}
+            onChange={() => {}}
+            disabled
+          />
         );
 
       case "enum": {
         const enumField = field as Extract<DynamicField, { type: "enum" }>;
         return (
-          <div>
-            <label htmlFor={field.name} className="block text-sm font-medium text-gray-300 mb-2">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-            <select
-              id={field.name}
-              className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
-            >
-              <option value="">Select an option</option>
-              {enumField.values.map((value: string) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectInput
+            id={field.name}
+            name={field.name}
+            label={label}
+            value=""
+            onChange={() => {}}
+            disabled
+            options={[
+              { value: "", label: "Select an option" },
+              ...(enumField.values && enumField.values.length > 0
+                ? enumField.values.map((value: string) => ({ value: value, label: value }))
+                : []),
+            ]}
+          />
         );
       }
 
       case "flag":
         return (
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id={field.name} className="w-4 h-4" />
-            <label htmlFor={field.name} className="text-gray-300">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-          </div>
+          <CheckboxInput
+            id={field.name}
+            name={field.name}
+            label={label}
+            checked={false}
+            onChange={() => {}}
+            disabled
+          />
         );
 
       case "number":
         return (
-          <div>
-            <label htmlFor={field.name} className="block text-sm font-medium text-gray-300 mb-2">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-            <input
-              id={field.name}
-              type="number"
-              className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
-              placeholder={field.default || "Enter a number"}
-            />
-          </div>
+          <NumberInput
+            id={field.name}
+            name={field.name}
+            label={label}
+            value=""
+            onChange={() => {}}
+            placeholder={field.default || "Enter a number"}
+            disabled
+          />
         );
 
       default: // string
         return (
-          <div>
-            <label htmlFor={field.name} className="block text-sm font-medium text-gray-300 mb-2">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-            <input
-              id={field.name}
-              type="text"
-              className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
-              placeholder={field.default || `e.g., ${field.name}`}
-            />
-          </div>
+          <TextInput
+            id={field.name}
+            name={field.name}
+            label={label}
+            value=""
+            onChange={() => {}}
+            placeholder={field.default || `e.g., ${field.name}`}
+            disabled
+          />
         );
     }
   };

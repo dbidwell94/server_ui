@@ -4,9 +4,10 @@ import AddFieldButton from "./AddFieldButton";
 import FieldEditorModal from "./FieldEditorModal";
 import FieldDisplay from "./FieldDisplay";
 import StaticConfig from "./StaticConfig";
+import CommandBuilderInput from "./CommandBuilderInput";
 import Button from "../../components/Button";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import type { DynamicField, ServerConfig } from "../../bindings";
+import type { DynamicField, ServerConfig, ConditionalRule } from "../../bindings";
 
 const DEFAULT_CONFIG: Omit<ServerConfig, "args"> = {
   steamAppId: 0,
@@ -24,6 +25,7 @@ export default function CreateSchema() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [_dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"fields" | "command">("fields");
 
   const handleStaticChange = (key: keyof Omit<ServerConfig, "args">, value: any) => {
     setConfig((prev) => ({
@@ -42,7 +44,7 @@ export default function CreateSchema() {
     setIsModalOpen(true);
   };
 
-  const handleSaveField = (field: DynamicField) => {
+  const handleSaveField = (field: DynamicField, rules?: ConditionalRule[]) => {
     if (editingIndex !== null) {
       setFields((prev) => {
         const updated = [...prev];
@@ -52,6 +54,18 @@ export default function CreateSchema() {
     } else {
       setFields((prev) => [...prev, field]);
     }
+
+    // Update rules if provided
+    if (rules) {
+      setConfig((prev) => ({
+        ...prev,
+        rules: [
+          ...prev.rules.filter((r) => r.targetFieldName !== field.name),
+          ...rules,
+        ],
+      }));
+    }
+
     setIsModalOpen(false);
     setEditingIndex(null);
   };
@@ -97,6 +111,13 @@ export default function CreateSchema() {
     const fullConfig: ServerConfig = {
       ...config,
       args: fields,
+      commandBuilder: config.commandBuilder 
+        ? {
+            structure: config.commandBuilder.structure[0]
+              .split(/\s+/)
+              .filter((part) => part.length > 0),
+          }
+        : null,
     };
     const dataStr = JSON.stringify(fullConfig, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
@@ -114,24 +135,75 @@ export default function CreateSchema() {
         <div className="max-w-7xl px-3 py-8 w-full space-y-8">
           <StaticConfig config={config} onChange={handleStaticChange} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
-            {fields.map((field, index) => (
-              <FieldDisplay
-                key={field.displayName ?? field.name}
-                field={field}
-                onDelete={() => handleDeleteField(index)}
-                onEdit={() => handleEditField(index)}
-                isDragging={draggedIndex === index}
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-              />
-            ))}
-
-            {/* Add new field button */}
-            <AddFieldButton onClick={handleAddField} />
+          {/* Tab Navigation */}
+          <div className="flex gap-4 border-b border-slate-700">
+            <button
+              onClick={() => setActiveTab("fields")}
+              className={`px-4 py-2 font-medium transition ${
+                activeTab === "fields"
+                  ? "text-blue-400 border-b-2 border-blue-400"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+            >
+              Fields
+            </button>
+            <button
+              onClick={() => setActiveTab("command")}
+              className={`px-4 py-2 font-medium transition ${
+                activeTab === "command"
+                  ? "text-blue-400 border-b-2 border-blue-400"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+            >
+              Command Builder
+            </button>
           </div>
+
+          {/* Fields Tab */}
+          {activeTab === "fields" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
+              {fields.map((field, index) => (
+                <FieldDisplay
+                  key={field.displayName ?? field.name}
+                  field={field}
+                  onDelete={() => handleDeleteField(index)}
+                  onEdit={() => handleEditField(index)}
+                  isDragging={draggedIndex === index}
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                />
+              ))}
+
+              {/* Add new field button */}
+              <AddFieldButton onClick={handleAddField} />
+            </div>
+          )}
+
+          {/* Command Builder Tab */}
+          {activeTab === "command" && (
+            <div className="space-y-4">
+              <CommandBuilderInput
+                value={config.commandBuilder?.structure.join(" ") || ""}
+                onChange={(value) => {
+                  setConfig((prev) => ({
+                    ...prev,
+                    commandBuilder: value.length > 0 
+                      ? { structure: [value] } 
+                      : null,
+                  }));
+                }}
+                fields={fields}
+                staticFields={[
+                  { name: "executableName", label: "Executable Name" },
+                  { name: "displayName", label: "Display Name" },
+                  { name: "steamAppId", label: "Steam App ID" },
+                  { name: "schemaVersion", label: "Schema Version" },
+                ]}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end">
             <Button
@@ -155,6 +227,12 @@ export default function CreateSchema() {
         }}
         onSave={handleSaveField}
         initialField={editingIndex !== null ? fields[editingIndex] : undefined}
+        allFields={fields}
+        existingRules={
+          editingIndex !== null
+            ? config.rules.filter((r) => r.targetFieldName === fields[editingIndex].name)
+            : []
+        }
       />
     </PageLayout>
   );

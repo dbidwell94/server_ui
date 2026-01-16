@@ -1,5 +1,8 @@
 import { useState } from "react";
 import TextInput from "../../components/TextInput";
+import NumberInput from "../../components/NumberInput";
+import SelectInput from "../../components/SelectInput";
+import CheckboxInput from "../../components/CheckboxInput";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import TypeSpecificConfig from "./TypeSpecificConfig";
@@ -25,94 +28,76 @@ export default function ArgumentEditor({
 
   const renderFieldPreview = () => {
     const label = field.displayName || field.name;
-    const isRequired = field.required ? "*" : "";
 
     switch (field.type) {
       case "boolean":
         return (
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="preview-field"
-              className="w-4 h-4"
-              disabled
-            />
-            <label htmlFor="preview-field" className="text-gray-300">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-          </div>
+          <CheckboxInput
+            id="preview-field"
+            name="previewField"
+            label={label}
+            checked={false}
+            onChange={() => {}}
+            disabled
+          />
         );
 
       case "enum": {
         const enumField = field as Extract<DynamicField, { type: "enum" }>;
         return (
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-            <select
-              className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
-              disabled
-            >
-              <option value="">Select an option</option>
-              {enumField.values.map((value: string) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectInput
+            id="preview-enum"
+            name="previewEnum"
+            label={label}
+            value=""
+            onChange={() => {}}
+            disabled
+            options={[
+              { value: "", label: "Select an option" },
+              ...(enumField.values && enumField.values.length > 0
+                ? enumField.values.map((v: string) => ({ value: v, label: v }))
+                : []),
+            ]}
+          />
         );
       }
 
       case "flag":
         return (
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="preview-flag"
-              className="w-4 h-4"
-              disabled
-            />
-            <label htmlFor="preview-flag" className="text-gray-300">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-          </div>
+          <CheckboxInput
+            id="preview-flag"
+            name="previewFlag"
+            label={label}
+            checked={false}
+            onChange={() => {}}
+            disabled
+          />
         );
 
       case "number":
         return (
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-            <input
-              type="number"
-              className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
-              placeholder={field.default || "Enter a number"}
-              disabled
-            />
-          </div>
+          <NumberInput
+            id="preview-number"
+            name="previewNumber"
+            label={label}
+            value=""
+            onChange={() => {}}
+            placeholder={field.default || "Enter a number"}
+            disabled
+          />
         );
 
       default: // string
         return (
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {label}
-              {isRequired && <span className="text-red-500">{isRequired}</span>}
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600"
-              placeholder={field.default || `e.g., ${field.name}`}
-              disabled
-            />
-          </div>
+          <TextInput
+            id="preview-string"
+            name="previewString"
+            label={label}
+            value=""
+            onChange={() => {}}
+            placeholder={field.default || `e.g., ${field.name}`}
+            disabled
+          />
         );
     }
   };
@@ -179,22 +164,20 @@ export default function ArgumentEditor({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Type
-          </label>
-          <select
-            value={field.type}
-            onChange={(e) => onChange("type", e.target.value)}
-            className="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600 hover:border-slate-500 focus:border-blue-500 outline-none transition"
-          >
-            <option value="string">String</option>
-            <option value="number">Number</option>
-            <option value="boolean">Boolean</option>
-            <option value="enum">Enum</option>
-            <option value="flag">Flag</option>
-          </select>
-        </div>
+        <SelectInput
+          id="field-type"
+          name="fieldType"
+          label="Type"
+          value={field.type}
+          onChange={(e) => onChange("type", e.target.value)}
+          options={[
+            { value: "string", label: "String" },
+            { value: "number", label: "Number" },
+            { value: "boolean", label: "Boolean" },
+            { value: "enum", label: "Enum" },
+            { value: "flag", label: "Flag" },
+          ]}
+        />
 
         <div>
           <TextInput
@@ -236,25 +219,21 @@ export default function ArgumentEditor({
       <TypeSpecificConfig field={field} onChange={handleTypeSpecificChange} />
 
       <div className="flex flex-wrap gap-6 mb-6">
-        <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={field.useEquals}
-            onChange={(e) => onChange("useEquals", e.target.checked)}
-            className="w-4 h-4"
-          />
-          Use equals (flag=value)
-        </label>
+        <CheckboxInput
+          id="field-use-equals"
+          name="fieldUseEquals"
+          label="Use equals (flag=value)"
+          checked={field.useEquals}
+          onChange={(e) => onChange("useEquals", e.target.checked)}
+        />
 
-        <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={field.required}
-            onChange={(e) => onChange("required", e.target.checked)}
-            className="w-4 h-4"
-          />
-          Required
-        </label>
+        <CheckboxInput
+          id="field-required"
+          name="fieldRequired"
+          label="Required"
+          checked={field.required}
+          onChange={(e) => onChange("required", e.target.checked)}
+        />
       </div>
 
       <div className="flex gap-3">

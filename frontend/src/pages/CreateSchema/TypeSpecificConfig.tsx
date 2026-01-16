@@ -106,18 +106,19 @@ export default function TypeSpecificConfig({
           Enum Values
         </label>
         <div className="space-y-2 mb-3">
-          {enumField.values.map((value: string, idx: number) => (
-            <div key={idx} className="flex gap-2">
-              <TextInput
-                id={`enum-value-${idx}`}
-                name={`enumValue${idx}`}
-                label=""
-                value={value}
-                onChange={(e) => {
-                  const newValues = [...enumField.values];
-                  newValues[idx] = e.target.value;
-                  const updatedField: DynamicField = {
-                    ...enumField,
+          {enumField.values && enumField.values.length > 0
+            ? enumField.values.map((value: string, idx: number) => (
+                <div key={idx} className="flex gap-2">
+                  <TextInput
+                    id={`enum-value-${idx}`}
+                    name={`enumValue${idx}`}
+                    label=""
+                    value={value}
+                    onChange={(e) => {
+                      const newValues = [...(enumField.values || [])];
+                      newValues[idx] = e.target.value;
+                      const updatedField: DynamicField = {
+                        ...enumField,
                     values: newValues,
                   } as DynamicField;
                   onChange(updatedField);
@@ -127,7 +128,7 @@ export default function TypeSpecificConfig({
               />
               <Button
                 onClick={() => {
-                  const newValues = enumField.values.filter(
+                  const newValues = (enumField.values || []).filter(
                     (_, i) => i !== idx
                   );
                   const updatedField: DynamicField = {
@@ -142,13 +143,16 @@ export default function TypeSpecificConfig({
                 Remove
               </Button>
             </div>
-          ))}
+              ))
+            : (
+              <p className="text-gray-400">No enum values yet</p>
+            )}
         </div>
         <Button
           onClick={() => {
             const updatedField: DynamicField = {
               ...enumField,
-              values: [...enumField.values, ""],
+              values: [...(enumField.values || []), ""],
             } as DynamicField;
             onChange(updatedField);
           }}
