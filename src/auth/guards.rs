@@ -50,12 +50,18 @@ impl<'r> FromRequest<'r> for AccessTokenGuard {
     type Error = AuthError;
 
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let auth_header = request
+        let token = request
             .headers()
             .get_one("Authorization")
-            .and_then(|h| h.strip_prefix("Bearer "));
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .or_else(|| {
+                request
+                    .uri()
+                    .query()
+                    .and_then(|q| q.segments().find(|s| s.0 == "token").map(|s| s.1))
+            });
 
-        match auth_header {
+        match token {
             None => Outcome::Error((Status::Unauthorized, AuthError::MissingToken)),
             Some(token) => match verify_token(token) {
                 Ok(claims) if claims.token_type == TokenType::Access => {

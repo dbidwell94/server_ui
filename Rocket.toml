@@ -5,3 +5,5 @@ port = 8000
 [release]
 address = "0.0.0.0"
 port = 8000
+# Disable Rocket's built-in HTTP logging to prevent token query params from appearing in logs
+log_level = "critical"

@@ -1,4 +1,4 @@
-use crate::state::steamcmd::SteamCMD;
+use crate::{auth::guards::AccessTokenGuard, state::steamcmd::SteamCMD};
 use rocket::{
     get,
     response::stream::{Event, EventStream},
@@ -6,7 +6,11 @@ use rocket::{
 };
 
 #[get("/stdout")]
-pub async fn stdout(steamcmd: &State<SteamCMD>, mut shutdown: Shutdown) -> EventStream![] {
+pub async fn stdout(
+    steamcmd: &State<SteamCMD>,
+    mut shutdown: Shutdown,
+    _auth_guard: AccessTokenGuard,
+) -> EventStream![] {
     let mut rx = steamcmd.subscribe();
     let last_lines = steamcmd.get_last_lines().await;
 
