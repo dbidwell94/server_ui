@@ -1,6 +1,5 @@
-use rocket::post;
-
 use crate::{auth, dto::user, service};
+use rocket::post;
 
 #[post("/create", data = "<new_user>")]
 pub async fn create_user(

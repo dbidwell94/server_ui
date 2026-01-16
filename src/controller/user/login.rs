@@ -1,6 +1,5 @@
-use rocket::post;
-
 use crate::{auth, dto::user, service};
+use rocket::post;
 
 #[post("/login", data = "<credentials>")]
 pub async fn login(

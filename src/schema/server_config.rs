@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 pub trait Validate {
     /// The target type against which validation is performed
@@ -8,8 +9,9 @@ pub trait Validate {
 }
 
 /// Represents the type of an argument that a game server supports
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "type", rename_all = "lowercase")]
+#[ts(export)]
 pub enum ArgumentType {
     /// A text/string argument
     String(StringConfig),
@@ -24,7 +26,9 @@ pub enum ArgumentType {
     Flag,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct StringConfig {
     /// Optional regex pattern that the string must match
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -37,7 +41,9 @@ pub struct StringConfig {
     pub min_length: Option<usize>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct NumberConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min: Option<f64>,
@@ -45,16 +51,18 @@ pub struct NumberConfig {
     pub max: Option<f64>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct EnumConfig {
     /// Possible values for the enum
     pub values: Vec<String>,
 }
 
 /// Represents a single dynamic field/argument that a game server supports
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct DynamicField {
     /// Name of this argument
     pub name: String,
@@ -99,8 +107,9 @@ impl DynamicField {
 }
 
 /// Represents a complete server configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServerConfig {
     /// Static fields (flattened into the root)
     #[serde(flatten)]
@@ -112,8 +121,9 @@ pub struct ServerConfig {
 }
 
 /// Static configuration for a server
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct StaticConfig {
     /// Steam App ID for this game
     pub steam_app_id: u32,

@@ -1,8 +1,9 @@
 use crate::controller::Error;
 use crate::service::user::User;
 use rocket::{get, serde::json::Json};
+use ts_rs::TS;
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct AdminStatus {
     has_admin: bool,

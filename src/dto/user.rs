@@ -2,9 +2,11 @@ use crate::entity::user::ActiveModel;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHasher};
 use rand::thread_rng;
+use ts_rs::TS;
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct New {
     pub username: String,
     pub password: String,
@@ -26,15 +28,17 @@ impl New {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct Login {
     pub username: String,
     pub password: String,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct Minimum {
     pub id: i32,
     pub username: String,
@@ -49,8 +53,9 @@ impl From<crate::entity::user::Model> for Minimum {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct AuthResponse {
     pub user: Minimum,
     pub access_token: String,

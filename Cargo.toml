@@ -29,6 +29,7 @@ serde = { version = "1.0", features = ["derive"] }
 migration = { path = "./migration" }
 rocket_ext = { version = "0.3" }
 dotenvy = "0.15"
+ts-rs = { version = "11" }
 
 # Database
 sea-orm = { version = "1.1", features = [
