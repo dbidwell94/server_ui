@@ -106,6 +106,99 @@ impl DynamicField {
     }
 }
 
+/// Represents an operator for condition evaluation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum ConditionOperator {
+    /// Value must equal exactly
+    Equals,
+
+    /// Value must not equal
+    NotEquals,
+
+    /// Value must be less than (numeric comparison)
+    LessThan,
+
+    /// Value must be greater than (numeric comparison)
+    GreaterThan,
+
+    /// Value must be less than or equal (numeric comparison)
+    LessThanOrEqual,
+
+    /// Value must be greater than or equal (numeric comparison)
+    GreaterThanOrEqual,
+
+    /// String must contain the value as a substring
+    Contains,
+
+    /// Value must match the regex pattern
+    Matches,
+
+    /// Value must be in the provided list
+    In,
+}
+
+/// Represents a condition that triggers a rule
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Condition {
+    /// The name of the field that is being checked
+    pub field_name: String,
+
+    /// The operator to use for comparison
+    pub operator: ConditionOperator,
+
+    /// The value to compare against (can be a single value or comma-separated for "In" operator)
+    pub value: String,
+}
+
+/// Represents a constraint applied to a field when a condition is met
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[serde(tag = "type", rename_all = "lowercase")]
+#[ts(export)]
+pub enum FieldConstraint {
+    /// Restrict enum values to a specific set
+    #[serde(rename_all = "camelCase")]
+    RestrictEnum {
+        values: Vec<String>,
+    },
+
+    /// Make a field required
+    Required,
+
+    /// Make a field optional
+    Optional,
+}
+
+/// Represents a conditional rule: if condition is met, apply constraints
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ConditionalRule {
+    /// The condition that must be met
+    pub condition: Condition,
+
+    /// The name of the field to apply constraints to
+    pub target_field_name: String,
+
+    /// The constraint(s) to apply when the condition is met
+    pub constraint: FieldConstraint,
+}
+
+/// Defines how the server command is constructed from field values
+/// Uses a simple template format where field references are denoted as {{fieldName}}
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CommandBuilder {
+    /// Ordered array of command structure parts
+    /// Strings can be literals or template variables like {{fieldName}}
+    /// Template variables are substituted with the corresponding field values at runtime
+    pub structure: Vec<String>,
+}
+
 /// Represents a complete server configuration
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -118,6 +211,14 @@ pub struct ServerConfig {
     /// Dynamic arguments that vary per game/server
     #[serde(default)]
     pub args: Vec<DynamicField>,
+
+    /// Conditional rules that apply constraints based on field values
+    #[serde(default)]
+    pub rules: Vec<ConditionalRule>,
+
+    /// How the server command is constructed from field values
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub command_builder: Option<CommandBuilder>,
 }
 
 /// Static configuration for a server
@@ -154,6 +255,8 @@ impl ServerConfig {
                 schema_version: default_schema_version(),
             },
             args: Vec::new(),
+            rules: Vec::new(),
+            command_builder: None,
         }
     }
 
