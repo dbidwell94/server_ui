@@ -17,7 +17,7 @@ export type ArgumentType = "string" | "number" | "boolean" | "enum" | "flag";
 
 export interface DynamicField {
   name: string;
-  flag: string;
+  flag?: string;
   useEquals: boolean;
   type: ArgumentType;
   stringConfig?: StringConfig;

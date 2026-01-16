@@ -51,8 +51,8 @@ export default function FieldEditorModal({
   };
 
   const handleSave = () => {
-    if (!field.name || !field.flag || !field.description) {
-      alert("Please fill in name, flag, and description");
+    if (!field.name || !field.description) {
+      alert("Please fill in name and description");
       return;
     }
     onSave(field);
@@ -87,9 +87,9 @@ export default function FieldEditorModal({
             <TextInput
               id="field-flag"
               name="fieldFlag"
-              label="Flag"
-              value={field.flag}
-              onChange={(e) => handleChange("flag", e.target.value)}
+              label="Flag (Optional)"
+              value={field.flag || ""}
+              onChange={(e) => handleChange("flag", e.target.value || undefined)}
               placeholder="e.g., --max-players"
             />
           </div>

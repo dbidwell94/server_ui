@@ -8,6 +8,7 @@ pub mod service;
 pub mod state;
 pub mod utils;
 
+use dotenvy::dotenv;
 use rocket::http::Method;
 use rocket::{get, routes};
 
@@ -94,9 +95,11 @@ fn dev_mode_fallback(_path: std::path::PathBuf) -> rocket::serde::json::Json<ser
 
 #[rocket::main]
 async fn main() -> anyhow::Result<()> {
+    dotenv().ok();
     // Initialize database
     #[cfg(feature = "local-dev")]
-    let database_url = "sqlite::memory:".to_string();
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite::memory:".to_string());
 
     #[cfg(not(feature = "local-dev"))]
     let database_url =

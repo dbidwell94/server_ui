@@ -164,7 +164,7 @@ export default function ArgumentEditor({
             id="field-flag"
             name="fieldFlag"
             label="Flag"
-            value={field.flag}
+            value={field.flag || ""}
             onChange={(e) => onChange("flag", e.target.value)}
             placeholder="e.g., --max-players"
           />
