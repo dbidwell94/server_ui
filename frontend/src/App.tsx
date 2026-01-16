@@ -7,6 +7,7 @@ import About from "./pages/About";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import Monitor from "./pages/Monitor";
+import CreateSchema from "./pages/CreateSchema";
 import OnboardingGate from "./components/OnboardingGate";
 import AuthenticatedRoute from "./components/AuthenticatedRoute";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -52,6 +53,14 @@ function AppRoutes() {
         element={
           <AuthenticatedRoute>
             <Monitor />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/create-schema"
+        element={
+          <AuthenticatedRoute>
+            <CreateSchema />
           </AuthenticatedRoute>
         }
       />

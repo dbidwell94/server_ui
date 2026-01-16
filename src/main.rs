@@ -3,6 +3,7 @@ mod controller;
 pub mod db;
 pub mod dto;
 pub mod entity;
+pub mod schema;
 pub mod service;
 pub mod state;
 pub mod utils;

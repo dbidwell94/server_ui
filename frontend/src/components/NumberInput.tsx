@@ -1,53 +1,55 @@
 import React from "react";
 
-interface TextInputProps {
+interface NumberInputProps {
   id: string;
   name: string;
-  type?: string;
   label: string;
-  value: string;
+  value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   placeholder?: string;
   helperText?: string;
-  fullWidth?: boolean;
+  min?: number;
+  max?: number;
 }
 
-export default function TextInput({
+export default function NumberInput({
   id,
   name,
-  type = "text",
   label,
   value,
   onChange,
   disabled = false,
   placeholder = "",
   helperText,
-  fullWidth = false,
-}: TextInputProps) {
+  min,
+  max,
+}: NumberInputProps) {
   const isError = helperText && helperText.length > 0;
 
   return (
-    <div className={fullWidth ? "w-full" : ""}>
+    <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">
         {label}
       </label>
       <input
         id={id}
         name={name}
-        type={type}
+        type="number"
         value={value}
         onChange={onChange}
         disabled={disabled}
         placeholder={placeholder}
-        className={`w-full px-4 py-2 border rounded-lg outline-none transition bg-slate-700 text-white placeholder-slate-400 disabled:bg-slate-600 disabled:cursor-not-allowed ${
+        min={min}
+        max={max}
+        className={`w-full px-3 py-2 bg-slate-700 text-white rounded border outline-none transition ${
           isError
-            ? "border-red-400 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            : "border-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-        }`}
+            ? "border-red-500 focus:border-red-400"
+            : "border-slate-600 hover:border-slate-500 focus:border-blue-500"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       />
       {helperText && (
-        <p className={`text-xs mt-1 ${isError ? "text-red-400 font-medium" : "text-gray-400"}`}>
+        <p className={`text-sm mt-1 ${isError ? "text-red-400" : "text-gray-400"}`}>
           {helperText}
         </p>
       )}
