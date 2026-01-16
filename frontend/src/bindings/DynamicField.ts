@@ -6,39 +6,32 @@ import type { StringConfig } from "./StringConfig";
 /**
  * Represents a single dynamic field/argument that a game server supports
  */
-export type DynamicField = {
-  /**
-   * Name of this argument
-   */
-  name: string;
-  /**
-   * Command-line flag associated with this argument (e.g., "--max-players")
-   */
-  flag: string;
-  /**
-   * Whether to use '=' between flag and value (e.g., --flag=value) (defaults to false)
-   */
-  useEquals: boolean;
-  /**
-   * Default value for this field (as a string, to be parsed based on arg_type)
-   */
-  default: string | null;
-  /**
-   * Whether this field is required to start the server
-   */
-  required: boolean;
-  /**
-   * Human-readable description of what this field does
-   */
-  description: string;
-  /**
-   * Display name for UI purposes
-   */
-  displayName: string | null;
-} & (
-  | ({ type: "string" } & StringConfig)
-  | ({ type: "number" } & NumberConfig)
-  | { type: "boolean" }
-  | ({ type: "enum" } & EnumConfig)
-  | { type: "flag" }
-);
+export type DynamicField = { 
+/**
+ * Name of this argument
+ */
+name: string, 
+/**
+ * Command-line flag associated with this argument (e.g., "--max-players")
+ */
+flag: string, 
+/**
+ * Whether to use '=' between flag and value (e.g., --flag=value) (defaults to false)
+ */
+useEquals: boolean, 
+/**
+ * Default value for this field (as a string, to be parsed based on arg_type)
+ */
+default: string | null, 
+/**
+ * Whether this field is required to start the server
+ */
+required: boolean, 
+/**
+ * Human-readable description of what this field does
+ */
+description: string, 
+/**
+ * Display name for UI purposes
+ */
+displayName: string | null, } & ({ "type": "string" } & StringConfig | { "type": "number" } & NumberConfig | { "type": "boolean" } | { "type": "enum" } & EnumConfig | { "type": "flag" });

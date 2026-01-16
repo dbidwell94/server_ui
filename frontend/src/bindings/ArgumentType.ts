@@ -6,9 +6,4 @@ import type { StringConfig } from "./StringConfig";
 /**
  * Represents the type of an argument that a game server supports
  */
-export type ArgumentType =
-  | ({ type: "string" } & StringConfig)
-  | ({ type: "number" } & NumberConfig)
-  | { type: "boolean" }
-  | ({ type: "enum" } & EnumConfig)
-  | { type: "flag" };
+export type ArgumentType = { "type": "string" } & StringConfig | { "type": "number" } & NumberConfig | { "type": "boolean" } | { "type": "enum" } & EnumConfig | { "type": "flag" };
