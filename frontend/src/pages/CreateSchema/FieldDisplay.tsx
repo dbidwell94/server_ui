@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { EllipsisVerticalIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  EllipsisVerticalIcon,
+  TrashIcon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 import TextInput from "../../components/TextInput";
 import SelectInput from "../../components/SelectInput";
 import NumberInput from "../../components/NumberInput";
@@ -53,9 +57,12 @@ export default function FieldDisplay({
             value=""
             onChange={() => {}}
             options={[
-              { value: "", label: "Select an option" },
+              { value: "", displayName: "Select an option" },
               ...(enumField.values && enumField.values.length > 0
-                ? enumField.values.map((value: string) => ({ value: value, label: value }))
+                ? enumField.values.map((value: string) => ({
+                    value: value,
+                    displayName: enumField.displayNames?.[value],
+                  }))
                 : []),
             ]}
           />
@@ -102,7 +109,9 @@ export default function FieldDisplay({
   return (
     <div
       className={`p-4 border rounded-lg relative transition cursor-grab ${
-        isDragging ? "bg-blue-900/50 border-blue-500 opacity-50 cursor-grabbing" : "bg-slate-800/50 border-slate-700"
+        isDragging
+          ? "bg-blue-900/50 border-blue-500 opacity-50 cursor-grabbing"
+          : "bg-slate-800/50 border-slate-700"
       }`}
       draggable
       onDragStart={onDragStart}

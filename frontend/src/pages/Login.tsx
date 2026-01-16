@@ -18,7 +18,9 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -72,33 +74,37 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <FormCard title="Login" subtitle="Sign in to your account">
           <form onSubmit={handleSubmit} className="space-y-6">
-        <TextInput
-          id="username"
-          name="username"
-          label="Username"
-          value={formData.username}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          placeholder="Enter your username"
-        />
+            <TextInput
+              id="username"
+              name="username"
+              label="Username"
+              value={formData.username}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              placeholder="Enter your username"
+            />
 
-        <TextInput
-          id="password"
-          name="password"
-          type="password"
-          label="Password"
-          value={formData.password}
-          onChange={handleInputChange}
-          disabled={isLoading}
-          placeholder="••••••••"
-        />
+            <TextInput
+              id="password"
+              name="password"
+              type="password"
+              label="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              placeholder="••••••••"
+            />
 
-        {error && <ErrorMessage message={error} />}
+            {error && <ErrorMessage message={error} />}
 
-        <Button type="submit" isLoading={isLoading} loadingText="Signing in...">
-          Sign In
-        </Button>
-      </form>
+            <Button
+              type="submit"
+              isLoading={isLoading}
+              loadingText="Signing in..."
+            >
+              Sign In
+            </Button>
+          </form>
         </FormCard>
       </div>
     </PageLayout>

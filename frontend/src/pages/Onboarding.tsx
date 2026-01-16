@@ -32,7 +32,9 @@ export default function Onboarding() {
     }
   }, [adminData?.hasAdmin, navigate]);
 
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = async (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     const updatedData = {
       ...formData,
@@ -71,9 +73,11 @@ export default function Onboarding() {
       // Handle validation errors
       if (err instanceof Error && "inner" in err) {
         const validationErrors: Record<string, string> = {};
-        (err.inner as Array<{ path: string; message: string }>).forEach((error) => {
-          validationErrors[error.path] = error.message;
-        });
+        (err.inner as Array<{ path: string; message: string }>).forEach(
+          (error) => {
+            validationErrors[error.path] = error.message;
+          }
+        );
         setErrors(validationErrors);
       }
       return;
@@ -105,7 +109,8 @@ export default function Onboarding() {
     } catch (err) {
       const errorMessage =
         err instanceof Error && "response" in err
-          ? (err as any).response?.data?.message || `Error: ${(err as any).response?.status}`
+          ? (err as any).response?.data?.message ||
+            `Error: ${(err as any).response?.status}`
           : "Failed to create admin user";
 
       setServerError(errorMessage);
@@ -117,7 +122,10 @@ export default function Onboarding() {
   return (
     <PageLayout showFooter showNavbar={false}>
       <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <FormCard title="Welcome" subtitle="Create your first admin account to get started">
+        <FormCard
+          title="Welcome"
+          subtitle="Create your first admin account to get started"
+        >
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextInput
               id="username"
@@ -156,7 +164,11 @@ export default function Onboarding() {
 
             {serverError && <ErrorMessage message={serverError} />}
 
-            <Button type="submit" isLoading={isLoading} loadingText="Creating account...">
+            <Button
+              type="submit"
+              isLoading={isLoading}
+              loadingText="Creating account..."
+            >
               Create Admin Account
             </Button>
           </form>

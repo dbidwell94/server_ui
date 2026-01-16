@@ -22,13 +22,40 @@ export default function RuleList({
   const fieldRules = rules.filter((r) => r.targetFieldName === targetFieldName);
 
   const getFieldDisplayName = (fieldName: string) => {
-    return allFields.find((f) => f.name === fieldName)?.displayName || fieldName;
+    return (
+      allFields.find((f) => f.name === fieldName)?.displayName || fieldName
+    );
   };
 
   const getConstraintLabel = (constraint: ConditionalRule["constraint"]) => {
     switch (constraint.type) {
-      case "restrictenum":
-        return `Restrict to: ${constraint.values && constraint.values.length > 0 ? constraint.values.join(", ") : "(none)"}`;
+      case "restrictenum": {
+        const displayValues =
+          constraint.values && constraint.values.length > 0
+            ? constraint.values
+                .map((v) => constraint.displayNames?.[v] || v)
+                .join(", ")
+            : "(none)";
+        return `Restrict to: ${displayValues}`;
+      }
+      case "restrictnumber": {
+        const parts = [];
+        if (constraint.min !== null && constraint.min !== undefined)
+          parts.push(`Min: ${constraint.min}`);
+        if (constraint.max !== null && constraint.max !== undefined)
+          parts.push(`Max: ${constraint.max}`);
+        return parts.length > 0 ? parts.join(", ") : "Number restriction";
+      }
+      case "restrictstring": {
+        const parts = [];
+        if (constraint.minLength !== null && constraint.minLength !== undefined)
+          parts.push(`Min length: ${constraint.minLength}`);
+        if (constraint.maxLength !== null && constraint.maxLength !== undefined)
+          parts.push(`Max length: ${constraint.maxLength}`);
+        if (constraint.pattern !== null && constraint.pattern !== undefined)
+          parts.push(`Pattern: ${constraint.pattern}`);
+        return parts.length > 0 ? parts.join(", ") : "String restriction";
+      }
       case "required":
         return "Make required";
       case "optional":
@@ -52,15 +79,24 @@ export default function RuleList({
   return (
     <div className="space-y-3">
       {fieldRules.map((rule, idx) => (
-        <div key={idx} className="p-4 bg-slate-800 rounded border border-slate-700">
+        <div
+          key={idx}
+          className="p-4 bg-slate-800 rounded border border-slate-700"
+        >
           <div className="mb-3">
             <p className="text-sm text-gray-300">
-              <span className="font-semibold">If</span> {getFieldDisplayName(rule.condition.fieldName)}{" "}
+              <span className="font-semibold">If</span>{" "}
+              {getFieldDisplayName(rule.condition.fieldName)}{" "}
               <span className="text-blue-400">{rule.condition.operator}</span>{" "}
-              <span className="font-mono text-yellow-400">{rule.condition.value}</span>
+              <span className="font-mono text-yellow-400">
+                {Array.isArray(rule.condition.value)
+                  ? rule.condition.value.join(", ")
+                  : rule.condition.value}
+              </span>
             </p>
             <p className="text-sm text-gray-300 mt-1">
-              <span className="font-semibold">Then</span> {getConstraintLabel(rule.constraint)}
+              <span className="font-semibold">Then</span>{" "}
+              {getConstraintLabel(rule.constraint)}
             </p>
           </div>
 

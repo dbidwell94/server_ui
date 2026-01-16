@@ -57,6 +57,9 @@ pub struct NumberConfig {
 pub struct EnumConfig {
     /// Possible values for the enum
     pub values: Vec<String>,
+    /// Optional mapping of enum values to human-readable display names
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_names: Option<std::collections::HashMap<String, String>>,
 }
 
 /// Represents a single dynamic field/argument that a game server supports
@@ -97,7 +100,7 @@ pub struct DynamicField {
 impl DynamicField {
     /// Validates the field configuration
     pub fn validate(&self) -> Result<(), String> {
-        if let ArgumentType::Enum(EnumConfig { values }) = &self.arg_type {
+        if let ArgumentType::Enum(EnumConfig { values, .. }) = &self.arg_type {
             if values.is_empty() {
                 return Err("Enum values cannot be empty".to_string());
             }
@@ -139,6 +142,17 @@ pub enum ConditionOperator {
     In,
 }
 
+/// Represents the value in a condition
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[ts(export)]
+#[serde(untagged)]
+pub enum ConditionValue {
+    /// A single value (for operators like equals, contains, etc.)
+    Single(String),
+    /// Multiple values (for the "In" operator)
+    Multiple(Vec<String>),
+}
+
 /// Represents a condition that triggers a rule
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
@@ -150,8 +164,10 @@ pub struct Condition {
     /// The operator to use for comparison
     pub operator: ConditionOperator,
 
-    /// The value to compare against (can be a single value or comma-separated for "In" operator)
-    pub value: String,
+    /// The value to compare against
+    /// For the "In" operator, this should be a list of values
+    /// For other operators, this should be a single string value
+    pub value: ConditionValue,
 }
 
 /// Represents a constraint applied to a field when a condition is met
@@ -163,6 +179,34 @@ pub enum FieldConstraint {
     #[serde(rename_all = "camelCase")]
     RestrictEnum {
         values: Vec<String>,
+        /// Optional mapping of enum values to human-readable display names
+        #[serde(skip_serializing_if = "Option::is_none")]
+        display_names: Option<std::collections::HashMap<String, String>>,
+    },
+
+    /// Restrict numeric values to a range
+    #[serde(rename_all = "camelCase")]
+    RestrictNumber {
+        /// Minimum value (inclusive)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        min: Option<f64>,
+        /// Maximum value (inclusive)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max: Option<f64>,
+    },
+
+    /// Restrict string values based on length and pattern
+    #[serde(rename_all = "camelCase")]
+    RestrictString {
+        /// Minimum length (inclusive)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        min_length: Option<usize>,
+        /// Maximum length (inclusive)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max_length: Option<usize>,
+        /// Regex pattern the string must match
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pattern: Option<String>,
     },
 
     /// Make a field required

@@ -14,16 +14,16 @@ interface RuleConditionBuilderProps {
   availableFields: DynamicField[];
 }
 
-const OPERATORS: { value: ConditionOperator; label: string }[] = [
-  { value: "equals", label: "Equals" },
-  { value: "notequals", label: "Not Equals" },
-  { value: "lessthan", label: "Less Than" },
-  { value: "greaterthan", label: "Greater Than" },
-  { value: "lessthanorequal", label: "Less Than or Equal" },
-  { value: "greaterthanorequal", label: "Greater Than or Equal" },
-  { value: "contains", label: "Contains" },
-  { value: "matches", label: "Matches (Regex)" },
-  { value: "in", label: "In List" },
+const OPERATORS: { value: ConditionOperator; displayName: string }[] = [
+  { value: "equals", displayName: "Equals" },
+  { value: "notequals", displayName: "Not Equals" },
+  { value: "lessthan", displayName: "Less Than" },
+  { value: "greaterthan", displayName: "Greater Than" },
+  { value: "lessthanorequal", displayName: "Less Than or Equal" },
+  { value: "greaterthanorequal", displayName: "Greater Than or Equal" },
+  { value: "contains", displayName: "Contains" },
+  { value: "matches", displayName: "Matches (Regex)" },
+  { value: "in", displayName: "In List" },
 ];
 
 export default function RuleConditionBuilder({
@@ -48,10 +48,13 @@ export default function RuleConditionBuilder({
           onChange={(e) =>
             onChange({ ...condition, fieldName: e.target.value })
           }
-          options={availableFields.map((f) => ({
-            value: f.name,
-            label: f.displayName || f.name,
-          }))}
+          options={availableFields.map((f) => {
+            const displayName = f.displayName || undefined;
+            return {
+              value: f.name,
+              displayName,
+            };
+          })}
         />
 
         <SelectInput
@@ -79,31 +82,108 @@ function getDynamicFieldByType(
   condition: Condition,
   onChange: (condition: Condition) => void
 ) {
+  // Special handling for "In List" operator
+  if (condition.operator === "in") {
+    if (field.type === "enum") {
+      // For enums, show checkboxes for multiple selection
+      const selectedValues = Array.isArray(condition.value)
+        ? condition.value
+        : (condition.value as string)
+          ? (condition.value as string).split(",").map((v: string) => v.trim())
+          : [];
+
+      return (
+        <div className="md:col-span-1 space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Select Values
+          </label>
+          <div className="space-y-2 max-h-48 overflow-y-auto bg-slate-700 p-2 rounded border border-slate-600">
+            {field.values && field.values.length > 0 ? (
+              field.values.map((value) => (
+                <CheckboxInput
+                  key={value}
+                  id={`in-list-${value}`}
+                  name={`inList-${value}`}
+                  label={field.displayNames?.[value] || value}
+                  checked={selectedValues.includes(value)}
+                  onChange={(e) => {
+                    const newValues = e.target.checked
+                      ? [...selectedValues, value]
+                      : selectedValues.filter((v) => v !== value);
+                    onChange({
+                      ...condition,
+                      value: newValues,
+                    });
+                  }}
+                />
+              ))
+            ) : (
+              <p className="text-gray-400 text-sm">No values available</p>
+            )}
+          </div>
+        </div>
+      );
+    } else {
+      // For non-enum types, show a textarea for comma-separated values
+      const textValue = Array.isArray(condition.value)
+        ? condition.value.join(", ")
+        : (condition.value as string) || "";
+
+      return (
+        <TextInput
+          id="condition-value"
+          name="conditionValue"
+          label="Values (comma-separated)"
+          value={textValue}
+          onChange={(e) => {
+            const values = e.target.value
+              .split(",")
+              .map((v) => v.trim())
+              .filter((v) => v.length > 0);
+            onChange({ ...condition, value: values });
+          }}
+          placeholder="e.g., value1, value2, value3"
+          textarea
+          rows={3}
+        />
+      );
+    }
+  }
+
   switch (field.type) {
     case "enum": {
+      const stringValue = Array.isArray(condition.value)
+        ? ""
+        : (condition.value as string) || "";
       return (
         <SelectInput
           id="condition-value"
           label="Value"
           name="conditionValue"
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
-          value={condition.value}
+          value={stringValue}
           options={[
             ...(field.values
-              ? field.values.map((v) => ({ value: v, label: v }))
-              : [{ value: "", label: "No values available" }]),
+              ? field.values.map((v) => ({
+                  value: v,
+                  displayName: field.displayNames?.[v],
+                }))
+              : [{ value: "", displayName: "No values available" }]),
           ]}
         />
       );
     }
     case "flag":
     case "boolean": {
+      const stringValue = Array.isArray(condition.value)
+        ? "false"
+        : (condition.value as string) || "false";
       return (
         <CheckboxInput
           id="condition-value"
           label="Value"
           name="conditionValue"
-          checked={condition.value === "true"}
+          checked={stringValue === "true"}
           onChange={(e) =>
             onChange({
               ...condition,
@@ -114,6 +194,9 @@ function getDynamicFieldByType(
       );
     }
     case "number": {
+      const stringValue = Array.isArray(condition.value)
+        ? ""
+        : (condition.value as string) || "";
       return (
         <NumberInput
           id="condition-value"
@@ -121,18 +204,21 @@ function getDynamicFieldByType(
           name="conditionValue"
           min={field.min}
           max={field.max}
-          value={condition.value}
+          value={stringValue}
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
         />
       );
     }
     default: {
+      const stringValue = Array.isArray(condition.value)
+        ? ""
+        : (condition.value as string) || "";
       return (
         <TextInput
           id="condition-value"
           label="Value"
           name="conditionValue"
-          value={condition.value}
+          value={stringValue}
           onChange={(e) => onChange({ ...condition, value: e.target.value })}
         />
       );

@@ -3,7 +3,11 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/Button";
 import RuleConditionBuilder from "./RuleConditionBuilder";
 import RuleConstraintBuilder from "./RuleConstraintBuilder";
-import type { ConditionalRule, FieldConstraint, DynamicField } from "../../bindings";
+import type {
+  ConditionalRule,
+  FieldConstraint,
+  DynamicField,
+} from "../../bindings";
 
 interface RuleEditorProps {
   isOpen: boolean;
@@ -28,46 +32,99 @@ export default function RuleEditor({
   allFields,
   existingRule,
 }: RuleEditorProps) {
-  const [rule, setRule] = useState<ConditionalRule>(
-    existingRule ?? {
-      ...DEFAULT_RULE,
-      targetFieldName: targetField.name,
-    }
+  // Available fields for condition (all except the target field)
+  const availableFieldsForCondition = allFields.filter(
+    (f) => f.name !== targetField.name
   );
 
-  // Available fields for condition (all except the target field)
-  const availableFieldsForCondition = allFields.filter((f) => f.name !== targetField.name);
+  const getInitialRule = (): ConditionalRule => {
+    if (existingRule) {
+      return existingRule;
+    }
+    const firstAvailableField = availableFieldsForCondition[0];
+    return {
+      ...DEFAULT_RULE,
+      targetFieldName: targetField.name,
+      condition: {
+        ...DEFAULT_RULE.condition,
+        fieldName: firstAvailableField?.name ?? "",
+      },
+    };
+  };
+
+  const [rule, setRule] = useState<ConditionalRule>(getInitialRule());
 
   // Initialize with existing rule when modal opens or existing rule changes
   useEffect(() => {
-    if (existingRule) {
-      setRule(existingRule);
-    } else {
-      setRule({
-        ...DEFAULT_RULE,
-        targetFieldName: targetField.name,
-      });
-    }
-  }, [isOpen, existingRule, targetField.name]);
+    setRule(getInitialRule());
+  }, [isOpen, existingRule, targetField.name, availableFieldsForCondition]);
 
-  // Auto-select first available field if none is selected and only one field is available
+  // When field changes, set a default value based on field type
   useEffect(() => {
-    if (!rule.condition.fieldName && availableFieldsForCondition.length > 0) {
-      setRule((prev) => ({
-        ...prev,
-        condition: {
-          ...prev.condition,
-          fieldName: availableFieldsForCondition[0].name,
-        },
-      }));
+    if (!existingRule && rule.condition.fieldName && !rule.condition.value) {
+      const selectedField = availableFieldsForCondition.find(
+        (f) => f.name === rule.condition.fieldName
+      );
+
+      if (selectedField) {
+        let defaultValue = "";
+
+        if (
+          selectedField.type === "enum" &&
+          selectedField.values &&
+          selectedField.values.length > 0
+        ) {
+          // For enums, select the first value
+          defaultValue = selectedField.values[0];
+        } else if (
+          selectedField.type === "boolean" ||
+          selectedField.type === "flag"
+        ) {
+          // For boolean/flag, default to "false"
+          defaultValue = "false";
+        } else if (selectedField.type === "number") {
+          // For numbers, default to "0"
+          defaultValue = "0";
+        } else {
+          // For strings and others, leave empty (user must fill)
+          defaultValue = "";
+        }
+
+        setRule((prev) => ({
+          ...prev,
+          condition: {
+            ...prev.condition,
+            value: defaultValue,
+          },
+        }));
+      }
     }
-  }, [availableFieldsForCondition]);
+  }, [rule.condition.fieldName, availableFieldsForCondition, existingRule]);
 
   const handleSave = () => {
-    if (!rule.condition.fieldName || !rule.condition.value) {
-      alert("Please fill in all condition fields");
-      return;
+    // Get the selected field to check its type
+    const selectedField = availableFieldsForCondition.find(
+      (f) => f.name === rule.condition.fieldName
+    );
+
+    // For boolean/flag types, value is automatically set, so validation passes
+    if (
+      selectedField &&
+      (selectedField.type === "boolean" || selectedField.type === "flag")
+    ) {
+      // These types always have a value set automatically
+    } else {
+      // For other types, value is required
+      const isEmpty = Array.isArray(rule.condition.value)
+        ? rule.condition.value.length === 0
+        : !(rule.condition.value as string) ||
+          (rule.condition.value as string).trim() === "";
+      if (isEmpty) {
+        alert("Please fill in all condition fields");
+        return;
+      }
     }
+
     onSave(rule);
     onClose();
   };

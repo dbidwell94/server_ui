@@ -6,7 +6,7 @@ interface SelectInputProps {
   label: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: Array<{ value: string; label: string }>;
+  options: Array<{ value: string; displayName?: string }>;
   disabled?: boolean;
   placeholder?: string;
   helperText?: string;
@@ -27,7 +27,10 @@ export default function SelectInput({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">
+      <label
+        htmlFor={id}
+        className="block text-sm font-medium text-gray-300 mb-1"
+      >
         {label}
       </label>
       <select
@@ -45,12 +48,14 @@ export default function SelectInput({
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {option.displayName || option.value}
           </option>
         ))}
       </select>
       {helperText && (
-        <p className={`text-sm mt-1 ${isError ? "text-red-400" : "text-gray-400"}`}>
+        <p
+          className={`text-sm mt-1 ${isError ? "text-red-400" : "text-gray-400"}`}
+        >
           {helperText}
         </p>
       )}

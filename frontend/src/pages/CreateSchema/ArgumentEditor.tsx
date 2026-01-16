@@ -53,9 +53,12 @@ export default function ArgumentEditor({
             onChange={() => {}}
             disabled
             options={[
-              { value: "", label: "Select an option" },
+              { value: "", displayName: "Select an option" },
               ...(enumField.values && enumField.values.length > 0
-                ? enumField.values.map((v: string) => ({ value: v, label: v }))
+                ? enumField.values.map((v: string) => ({
+                    value: v,
+                    displayName: enumField.displayNames?.[v],
+                  }))
                 : []),
             ]}
           />
@@ -105,7 +108,9 @@ export default function ArgumentEditor({
   if (isPreview) {
     return (
       <Card>
-        <h2 className="text-lg font-bold text-white mb-6">Preview: {field.displayName || field.name}</h2>
+        <h2 className="text-lg font-bold text-white mb-6">
+          Preview: {field.displayName || field.name}
+        </h2>
         <div className="mb-6 p-4 bg-slate-800 rounded border border-slate-700">
           {renderFieldPreview()}
         </div>
@@ -171,11 +176,11 @@ export default function ArgumentEditor({
           value={field.type}
           onChange={(e) => onChange("type", e.target.value)}
           options={[
-            { value: "string", label: "String" },
-            { value: "number", label: "Number" },
-            { value: "boolean", label: "Boolean" },
-            { value: "enum", label: "Enum" },
-            { value: "flag", label: "Flag" },
+            { value: "string", displayName: "String" },
+            { value: "number", displayName: "Number" },
+            { value: "boolean", displayName: "Boolean" },
+            { value: "enum", displayName: "Enum" },
+            { value: "flag", displayName: "Flag" },
           ]}
         />
 
@@ -244,11 +249,7 @@ export default function ArgumentEditor({
         >
           Preview
         </Button>
-        <Button
-          onClick={onAddField}
-          variant="primary"
-          maxWidth={false}
-        >
+        <Button onClick={onAddField} variant="primary" maxWidth={false}>
           Add Argument
         </Button>
       </div>

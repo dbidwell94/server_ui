@@ -1,6 +1,6 @@
 import Button from "../../components/Button";
-import CheckboxInput from "../../components/CheckboxInput";
 import type { DynamicField, FieldConstraint } from "../../bindings";
+import ConstraintConfig from "./ConstraintConfig";
 
 interface RuleConstraintBuilderProps {
   constraint: FieldConstraint;
@@ -22,10 +22,8 @@ export default function RuleConstraintBuilder({
   }
 
   const isEnumField = targetField.type === "enum";
-  const enumValues =
-    isEnumField && targetField.type === "enum"
-      ? (targetField as Extract<DynamicField, { type: "enum" }>).values || []
-      : [];
+  const isNumberField = targetField.type === "number";
+  const isStringField = targetField.type === "string";
 
   return (
     <div className="space-y-4 p-4 bg-slate-800 rounded border border-slate-700">
@@ -53,11 +51,13 @@ export default function RuleConstraintBuilder({
           </Button>
           {isEnumField && (
             <Button
-              variant={constraint.type === "restrictenum" ? "primary" : "secondary"}
+              variant={
+                constraint.type === "restrictenum" ? "primary" : "secondary"
+              }
               onClick={() =>
                 onChange({
                   type: "restrictenum",
-                  values: enumValues.slice(0, 1), // Pre-select first value
+                  values: targetField.values?.slice(0, 1) || [],
                 } as FieldConstraint)
               }
               maxWidth={false}
@@ -65,44 +65,45 @@ export default function RuleConstraintBuilder({
               Restrict Values
             </Button>
           )}
+          {isNumberField && (
+            <Button
+              variant={
+                constraint.type === "restrictnumber" ? "primary" : "secondary"
+              }
+              onClick={() =>
+                onChange({
+                  type: "restrictnumber",
+                } as FieldConstraint)
+              }
+              maxWidth={false}
+            >
+              Restrict Range
+            </Button>
+          )}
+          {isStringField && (
+            <Button
+              variant={
+                constraint.type === "restrictstring" ? "primary" : "secondary"
+              }
+              onClick={() =>
+                onChange({
+                  type: "restrictstring",
+                } as FieldConstraint)
+              }
+              maxWidth={false}
+            >
+              Restrict Pattern
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Constraint-specific configuration */}
-      {constraint.type === "restrictenum" && isEnumField ? (() => {
-        const restrictEnum = constraint as Extract<FieldConstraint, { type: "restrictenum" }>;
-        return (
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-300">
-              Allowed Values
-            </label>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {enumValues && enumValues.length > 0 ? (
-                enumValues.map((value) => (
-                  <CheckboxInput
-                    key={value}
-                    id={`restrict-${value}`}
-                    name={`restrict-${value}`}
-                    label={value}
-                    checked={restrictEnum.values.includes(value)}
-                    onChange={(e) => {
-                      const newValues = e.target.checked
-                        ? [...restrictEnum.values, value]
-                        : restrictEnum.values.filter((v) => v !== value);
-                      onChange({
-                        type: "restrictenum",
-                        values: newValues,
-                      } as FieldConstraint);
-                    }}
-                  />
-                ))
-              ) : (
-                <p className="text-gray-400">No values available</p>
-              )}
-            </div>
-          </div>
-        );
-      })() : null}
+      <ConstraintConfig
+        constraint={constraint}
+        onChange={onChange}
+        targetField={targetField}
+      />
     </div>
   );
 }

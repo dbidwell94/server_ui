@@ -4,4 +4,8 @@ export type EnumConfig = {
 /**
  * Possible values for the enum
  */
-values: Array<string>, };
+values: Array<string>, 
+/**
+ * Optional mapping of enum values to human-readable display names
+ */
+displayNames: { [key in string]?: string } | null, };

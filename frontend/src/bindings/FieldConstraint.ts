@@ -3,4 +3,28 @@
 /**
  * Represents a constraint applied to a field when a condition is met
  */
-export type FieldConstraint = { "type": "restrictenum", values: Array<string>, } | { "type": "required" } | { "type": "optional" };
+export type FieldConstraint = { "type": "restrictenum", values: Array<string>, 
+/**
+ * Optional mapping of enum values to human-readable display names
+ */
+displayNames: { [key in string]?: string } | null, } | { "type": "restrictnumber", 
+/**
+ * Minimum value (inclusive)
+ */
+min: number | null, 
+/**
+ * Maximum value (inclusive)
+ */
+max: number | null, } | { "type": "restrictstring", 
+/**
+ * Minimum length (inclusive)
+ */
+minLength: number | null, 
+/**
+ * Maximum length (inclusive)
+ */
+maxLength: number | null, 
+/**
+ * Regex pattern the string must match
+ */
+pattern: string | null, } | { "type": "required" } | { "type": "optional" };
