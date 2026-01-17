@@ -21,7 +21,6 @@ export default function ConstraintConfig({
       { type: "restrictenum" }
     >;
     const enumValues = targetField.values || [];
-    const displayNames = targetField.displayNames || {};
 
     return (
       <div className="space-y-4">
