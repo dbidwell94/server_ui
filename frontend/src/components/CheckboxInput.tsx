@@ -8,6 +8,7 @@ interface CheckboxInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   helperText?: string;
+  required?: boolean;
 }
 
 export default function CheckboxInput({
@@ -18,6 +19,7 @@ export default function CheckboxInput({
   onChange,
   disabled = false,
   helperText,
+  required = false,
 }: CheckboxInputProps) {
   const isError = helperText && helperText.length > 0;
 
@@ -36,10 +38,15 @@ export default function CheckboxInput({
           disabled={disabled}
           className={`w-4 h-4 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         />
-        {label}
+        <span>
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </span>
       </label>
       {helperText && (
-        <p className={`text-sm mt-1 ${isError ? "text-red-400" : "text-gray-400"}`}>
+        <p
+          className={`text-sm mt-1 ${isError ? "text-red-400" : "text-gray-400"}`}
+        >
           {helperText}
         </p>
       )}

@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Monitor from "./pages/Monitor";
 import CreateSchema from "./pages/CreateSchema";
 import Schemas from "./pages/Schemas";
+import RunGame from "./pages/RunGame";
 import OnboardingGate from "./components/OnboardingGate";
 import AuthenticatedRoute from "./components/AuthenticatedRoute";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -78,6 +79,14 @@ function AppRoutes() {
         element={
           <AuthenticatedRoute>
             <Schemas />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/run-game"
+        element={
+          <AuthenticatedRoute>
+            <RunGame />
           </AuthenticatedRoute>
         }
       />

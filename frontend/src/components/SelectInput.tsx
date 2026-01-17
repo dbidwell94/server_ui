@@ -10,6 +10,7 @@ interface SelectInputProps {
   disabled?: boolean;
   placeholder?: string;
   helperText?: string;
+  required?: boolean;
 }
 
 export default function SelectInput({
@@ -22,6 +23,7 @@ export default function SelectInput({
   disabled = false,
   placeholder = "",
   helperText,
+  required = false,
 }: SelectInputProps) {
   const isError = helperText && helperText.length > 0;
 
@@ -32,6 +34,7 @@ export default function SelectInput({
         className="block text-sm font-medium text-gray-300 mb-1"
       >
         {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <select
         id={id}
@@ -39,6 +42,7 @@ export default function SelectInput({
         value={value}
         onChange={onChange}
         disabled={disabled}
+        required={required}
         className={`w-full px-3 py-2 bg-slate-700 text-white rounded border outline-none transition ${
           isError
             ? "border-red-500 focus:border-red-400"

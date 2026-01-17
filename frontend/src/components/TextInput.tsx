@@ -15,6 +15,7 @@ interface TextInputProps {
   fullWidth?: boolean;
   textarea?: boolean;
   rows?: number;
+  required?: boolean;
 }
 
 export default function TextInput({
@@ -30,6 +31,7 @@ export default function TextInput({
   fullWidth = false,
   textarea = false,
   rows = 3,
+  required = false,
 }: TextInputProps) {
   const isError = helperText && helperText.length > 0;
   const baseClassName = `w-full px-4 py-2 border rounded-lg outline-none transition bg-slate-700 text-white placeholder-slate-400 disabled:bg-slate-600 disabled:cursor-not-allowed ${
@@ -45,6 +47,7 @@ export default function TextInput({
         className="block text-sm font-medium text-gray-300 mb-1"
       >
         {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {textarea ? (
         <textarea
@@ -55,6 +58,7 @@ export default function TextInput({
           disabled={disabled}
           placeholder={placeholder}
           rows={rows}
+          required={required}
           className={`${baseClassName} resize-none`}
         />
       ) : (
@@ -66,6 +70,7 @@ export default function TextInput({
           onChange={onChange as React.ChangeEventHandler<HTMLInputElement>}
           disabled={disabled}
           placeholder={placeholder}
+          required={required}
           className={baseClassName}
         />
       )}

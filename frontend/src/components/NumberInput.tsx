@@ -11,6 +11,7 @@ interface NumberInputProps {
   helperText?: string;
   min?: number | null;
   max?: number | null;
+  required?: boolean;
 }
 
 export default function NumberInput({
@@ -24,6 +25,7 @@ export default function NumberInput({
   helperText,
   min,
   max,
+  required = false,
 }: NumberInputProps) {
   const isError = helperText && helperText.length > 0;
 
@@ -34,6 +36,7 @@ export default function NumberInput({
         className="block text-sm font-medium text-gray-300 mb-1"
       >
         {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <input
         id={id}
@@ -45,6 +48,7 @@ export default function NumberInput({
         placeholder={placeholder}
         min={min ?? undefined}
         max={max ?? undefined}
+        required={required}
         className={`w-full px-3 py-2 bg-slate-700 text-white rounded border outline-none transition ${
           isError
             ? "border-red-500 focus:border-red-400"

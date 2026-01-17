@@ -29,9 +29,9 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await api.post('/user/logout');
+      await api.post("/user/logout");
     } catch (error) {
-      console.error('Logout request failed:', error);
+      console.error("Logout request failed:", error);
     }
     logout();
     setIsDropdownOpen(false);
@@ -59,7 +59,9 @@ export default function Navbar() {
             {/* Logo with Status Indicator */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${getStatusColor()} animate-pulse`} />
+                <span
+                  className={`w-3 h-3 rounded-full ${getStatusColor()} animate-pulse`}
+                />
                 <h1 className="text-2xl font-bold text-white">Deliverance</h1>
               </div>
             </Link>
@@ -74,6 +76,12 @@ export default function Navbar() {
               </Link>
               {isAuthenticated && user ? (
                 <>
+                  <Link
+                    to="/run-game"
+                    className="text-gray-300 hover:text-white font-medium transition"
+                  >
+                    Run Game
+                  </Link>
                   <UserDropdown
                     user={user}
                     isOpen={isDropdownOpen}
@@ -112,7 +120,6 @@ export default function Navbar() {
       {isOpen && (
         <div
           className={`fixed top-0 left-0 h-screen w-64 bg-slate-900 shadow-xl z-50 md:hidden ${
-
             isClosing ? "animate-slide-out" : "animate-slide-in"
           }`}
         >
