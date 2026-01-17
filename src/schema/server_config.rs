@@ -1,13 +1,6 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-pub trait Validate {
-    /// The target type against which validation is performed
-    type Target;
-    /// Validates the implementing struct against the target
-    fn validate(&self, target: &Self::Target) -> Result<(), String>;
-}
-
 /// Represents the type of an argument that a game server supports
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "type", rename_all = "lowercase")]
