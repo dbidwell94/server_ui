@@ -11,22 +11,18 @@ pub mod utils;
 use dotenvy::dotenv;
 use rocket::http::Method;
 use rocket::{get, routes};
-
-#[cfg(not(feature = "local-dev"))]
-use rocket::http::{ContentType, Status};
-
-#[cfg(not(feature = "local-dev"))]
-use rocket::response::Responder;
-
-#[cfg(not(feature = "local-dev"))]
-use rocket::{Request, Response};
 use rocket_ext::cors::Cors;
 
 #[cfg(not(feature = "local-dev"))]
-use std::io::Cursor;
-
+use rocket::http::{ContentType, Status};
+#[cfg(not(feature = "local-dev"))]
+use rocket::response::Responder;
+#[cfg(not(feature = "local-dev"))]
+use rocket::{Request, Response};
 #[cfg(not(feature = "local-dev"))]
 use rust_embed::RustEmbed;
+#[cfg(not(feature = "local-dev"))]
+use std::io::Cursor;
 
 #[cfg(not(feature = "local-dev"))]
 #[derive(RustEmbed)]

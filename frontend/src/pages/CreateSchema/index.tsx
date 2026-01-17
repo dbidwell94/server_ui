@@ -37,6 +37,7 @@ export default function CreateSchema() {
   const [config, setConfig] =
     useState<Omit<ServerConfig, "args">>(DEFAULT_CONFIG);
   const [fields, setFields] = useState<DynamicField[]>([]);
+  const [commandBuilderValue, setCommandBuilderValue] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -62,6 +63,9 @@ export default function CreateSchema() {
         commandBuilder: schemaValue.commandBuilder,
       });
       setFields(schemaValue.args);
+      if (schemaValue.commandBuilder) {
+        setCommandBuilderValue(schemaValue.commandBuilder.structure.join(" "));
+      }
       if (editingSchemaId.isSome()) {
         setCurrentEditingSchemaId(editingSchemaId.value);
       }
@@ -159,9 +163,7 @@ export default function CreateSchema() {
       args: fields,
       commandBuilder: config.commandBuilder
         ? {
-            structure: config.commandBuilder.structure[0]
-              .split(/\s+/)
-              .filter((part) => part.length > 0),
+            structure: config.commandBuilder.structure,
           }
         : null,
     };
@@ -198,9 +200,7 @@ export default function CreateSchema() {
         args: fields,
         commandBuilder: config.commandBuilder
           ? {
-              structure: config.commandBuilder.structure[0]
-                .split(/\s+/)
-                .filter((part) => part.length > 0),
+              structure: config.commandBuilder.structure,
             }
           : null,
       };
@@ -286,12 +286,19 @@ export default function CreateSchema() {
           {activeTab === "command" && (
             <div className="space-y-4">
               <CommandBuilderInput
-                value={config.commandBuilder?.structure.join(" ") || ""}
+                value={commandBuilderValue}
                 onChange={(value) => {
+                  setCommandBuilderValue(value);
                   setConfig((prev) => ({
                     ...prev,
                     commandBuilder:
-                      value.length > 0 ? { structure: [value] } : null,
+                      value.length > 0
+                        ? {
+                            structure: value
+                              .split(/\s+/)
+                              .filter((part) => part.length > 0),
+                          }
+                        : null,
                   }));
                 }}
                 fields={fields}
