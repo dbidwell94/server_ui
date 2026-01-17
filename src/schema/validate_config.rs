@@ -2,12 +2,13 @@ use crate::{
     schema::{
         self,
         server_config::{ArgumentType, DynamicField},
+        GameConfig,
     },
     utils::error_response,
 };
 use regex::Regex;
 use rocket::{http::Status, response::Responder};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use thiserror::Error;
 
 #[cfg(test)]
@@ -33,30 +34,20 @@ impl Responder<'_, 'static> for SchemaValidationError {
 
 pub fn validate_config(
     schema: &schema::ServerConfig,
-    to_validate: &serde_json::Value,
+    config: &GameConfig,
 ) -> Result<(), Vec<SchemaValidationError>> {
     let mut errors = Vec::new();
 
-    // Ensure to_validate is an object
-    let config_obj = match to_validate.as_object() {
-        Some(obj) => obj,
-        None => {
-            return Err(vec![SchemaValidationError::GeneralError(
-                "Config must be a JSON object".to_string(),
-            )])
-        }
-    };
-
     // First pass: Validate each field in the schema
     for field in &schema.args {
-        if let Err(field_errors) = validate_field(field, config_obj) {
+        if let Err(field_errors) = validate_field(field, &config) {
             errors.extend(field_errors);
         }
     }
 
     // Second pass: Evaluate rules and apply constraints
     for rule in &schema.rules {
-        if let Err(rule_errors) = apply_rule_constraints(rule, &schema.args, config_obj) {
+        if let Err(rule_errors) = apply_rule_constraints(rule, &schema.args, &config) {
             errors.extend(rule_errors);
         }
     }
@@ -70,7 +61,7 @@ pub fn validate_config(
 
 fn validate_field(
     field: &DynamicField,
-    config: &Map<String, Value>,
+    config: &GameConfig,
 ) -> Result<(), Vec<SchemaValidationError>> {
     let mut errors = Vec::new();
 
@@ -321,7 +312,7 @@ fn validate_enum_field(
 fn apply_rule_constraints(
     rule: &schema::ConditionalRule,
     fields: &[DynamicField],
-    config: &Map<String, Value>,
+    config: &GameConfig,
 ) -> Result<(), Vec<SchemaValidationError>> {
     let mut errors = Vec::new();
 
@@ -441,7 +432,7 @@ fn apply_rule_constraints(
 fn evaluate_condition(
     condition: &schema::Condition,
     _fields: &[DynamicField],
-    config: &Map<String, Value>,
+    config: &GameConfig,
 ) -> Result<bool, Vec<SchemaValidationError>> {
     let mut errors = Vec::new();
 

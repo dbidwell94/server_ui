@@ -19,8 +19,7 @@ impl MigrationTrait for Migration {
                         Index::create()
                             .unique()
                             .col(GameSchema::Name)
-                            .col(GameSchema::SteamAppId)
-                            .col(GameSchema::SchemaVersion),
+                            .col(GameSchema::SteamAppId),
                     )
                     .to_owned(),
             )

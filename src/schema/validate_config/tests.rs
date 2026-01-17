@@ -1,6 +1,15 @@
 use super::*;
 use crate::schema::server_config::*;
 use serde_json::json;
+use std::collections::HashMap;
+
+// Helper function to convert a serde_json::Value to GameConfig
+fn value_to_game_config(value: &serde_json::Value) -> GameConfig {
+    match value.as_object() {
+        Some(obj) => obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+        None => HashMap::new(),
+    }
+}
 
 // Helper function to create a basic test schema
 fn create_test_schema() -> ServerConfig {
@@ -20,22 +29,19 @@ fn create_test_schema() -> ServerConfig {
 #[test]
 fn test_validate_config_non_object_input() {
     let schema = create_test_schema();
-    let config = json!("not an object");
+    let config_value = json!("not an object");
+    let config = value_to_game_config(&config_value);
 
+    // Non-objects convert to empty HashMap, which is valid
     let result = validate_config(&schema, &config);
-    assert!(result.is_err());
-    let errors = result.unwrap_err();
-    assert_eq!(errors.len(), 1);
-    match &errors[0] {
-        SchemaValidationError::GeneralError(msg) => assert!(msg.contains("must be a JSON object")),
-        _ => panic!("Expected GeneralError"),
-    }
+    assert!(result.is_ok());
 }
 
 #[test]
 fn test_validate_config_empty_schema_empty_config() {
     let schema = create_test_schema();
-    let config = json!({});
+    let config_value = json!({});
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -59,7 +65,8 @@ fn test_required_string_field_missing() {
         display_name: None,
     });
 
-    let config = json!({});
+    let config_value = json!({});
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -89,9 +96,10 @@ fn test_required_string_field_provided() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "server_name": "My Server"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -115,9 +123,10 @@ fn test_string_field_pattern_validation_pass() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "port": "8080"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -141,9 +150,10 @@ fn test_string_field_pattern_validation_fail() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "port": "not_a_port"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -176,9 +186,10 @@ fn test_string_field_min_length() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "name": "ab"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -211,9 +222,10 @@ fn test_string_field_max_length() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "name": "toolongname"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -236,9 +248,10 @@ fn test_number_field_parse_string() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "max_players": "64"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -261,9 +274,10 @@ fn test_number_field_min_constraint() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "max_players": 0
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -294,9 +308,10 @@ fn test_number_field_max_constraint() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "max_players": 300
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -319,9 +334,10 @@ fn test_number_field_invalid_string() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "max_players": "not_a_number"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -351,9 +367,10 @@ fn test_enum_field_valid() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "difficulty": "normal"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -376,9 +393,10 @@ fn test_enum_field_invalid() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "difficulty": "impossible"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -406,9 +424,10 @@ fn test_boolean_field_valid() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "enable_pvp": true
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -458,10 +477,11 @@ fn test_condition_equals_true() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "difficulty": "hard",
         "extra_loot": "high"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -511,10 +531,11 @@ fn test_condition_equals_constraint_violated() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "difficulty": "hard",
         "extra_loot": "low"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -572,10 +593,11 @@ fn test_condition_not_met_no_constraint() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "difficulty": "easy",
         "extra_loot": "low"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -625,10 +647,11 @@ fn test_condition_greater_than() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "max_players": 150,
         "server_ram": 16
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -678,10 +701,11 @@ fn test_condition_less_than() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "player_count": 1,
         "mode": "singleplayer"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -726,10 +750,11 @@ fn test_condition_contains() {
         constraint: FieldConstraint::Required,
     });
 
-    let config = json!({
+    let config_value = json!({
         "server_name": "PvP Arena",
         "pvp_enabled": true
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -777,10 +802,11 @@ fn test_condition_in_operator() {
         constraint: FieldConstraint::Required,
     });
 
-    let config = json!({
+    let config_value = json!({
         "game_type": "survival",
         "difficulty_locked": true
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -825,10 +851,11 @@ fn test_condition_matches_regex() {
         constraint: FieldConstraint::Required,
     });
 
-    let config = json!({
+    let config_value = json!({
         "port": "443",
         "require_auth": true
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -881,10 +908,11 @@ fn test_multiple_validation_errors_collected() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "max_players": 300,
         "port": "invalid"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -910,7 +938,8 @@ fn test_optional_field_with_no_value() {
         display_name: None,
     });
 
-    let config = json!({});
+    let config_value = json!({});
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -934,7 +963,8 @@ fn test_field_with_default_value() {
         display_name: None,
     });
 
-    let config = json!({});
+    let config_value = json!({});
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -984,10 +1014,11 @@ fn test_restrict_number_constraint() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "player_count": 100,
         "server_ram": 16
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -1040,10 +1071,11 @@ fn test_restrict_string_constraint() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "mode": "hardcore",
         "server_name": "[HC] My Server"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -1067,9 +1099,10 @@ fn test_invalid_regex_in_pattern() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "port": "8080"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_err());
@@ -1098,9 +1131,10 @@ fn test_null_value_for_optional_field() {
         display_name: None,
     });
 
-    let config = json!({
+    let config_value = json!({
         "optional_string": null
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());
@@ -1151,10 +1185,11 @@ fn test_condition_not_equals() {
         },
     });
 
-    let config = json!({
+    let config_value = json!({
         "difficulty": "hard",
         "warning_level": "high"
     });
+    let config = value_to_game_config(&config_value);
 
     let result = validate_config(&schema, &config);
     assert!(result.is_ok());

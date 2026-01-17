@@ -1,5 +1,5 @@
 import apiClient from "./api";
-import type { ServerConfig, SchemaMetadata } from "../bindings";
+import type { ServerConfig, SchemaMetadata, GameConfig } from "../bindings";
 
 /**
  * Saves a server schema configuration to the server.
@@ -7,11 +7,11 @@ import type { ServerConfig, SchemaMetadata } from "../bindings";
  * @returns Promise resolving to the schema metadata including the assigned ID
  */
 export async function saveSchema(
-  schema: ServerConfig
+  schema: ServerConfig,
 ): Promise<SchemaMetadata> {
   const response = await apiClient.post<SchemaMetadata>(
     "/game_schema/create",
-    schema
+    schema,
   );
   return response.data;
 }
@@ -32,10 +32,10 @@ export async function getSchemaById(id: number): Promise<ServerConfig> {
  * @returns Promise resolving to the SchemaMetadata
  */
 export async function getSchemaMetadataById(
-  id: number
+  id: number,
 ): Promise<SchemaMetadata> {
   const response = await apiClient.get<SchemaMetadata>(
-    `/game_schema/metadata/${id}`
+    `/game_schema/metadata/${id}`,
   );
   return response.data;
 }
@@ -55,11 +55,11 @@ export async function getAllSchemas(): Promise<SchemaMetadata[]> {
  * @returns Promise resolving to an array of matching SchemaMetadata
  */
 export async function searchSchemasByName(
-  nameFilter: string
+  nameFilter: string,
 ): Promise<SchemaMetadata[]> {
   const response = await apiClient.get<SchemaMetadata[]>(
     `/game_schema/search`,
-    { params: { name: nameFilter } }
+    { params: { name: nameFilter } },
   );
   return response.data;
 }
@@ -72,7 +72,7 @@ export async function searchSchemasByName(
  */
 export async function updateSchema(
   id: number,
-  schema: ServerConfig
+  schema: ServerConfig,
 ): Promise<void> {
   await apiClient.put(`/game_schema/update/${id}`, schema);
 }
@@ -84,6 +84,18 @@ export async function updateSchema(
  */
 export async function validateSchema(schema: ServerConfig): Promise<void> {
   await apiClient.post("/game_schema/validate", schema);
+}
+
+export async function validateGameConfig(
+  schemaId: number,
+  config: GameConfig["config"],
+): Promise<void> {
+  const payload: GameConfig = {
+    schemaId,
+    config: config,
+  };
+
+  await apiClient.post("/game_schema/validate_game_config", payload);
 }
 
 /**

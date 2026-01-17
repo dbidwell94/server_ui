@@ -4,6 +4,7 @@ mod json_by_id;
 mod list;
 mod update_schema;
 mod validate;
+mod validate_game_config;
 
 use rocket::{routes, Route};
 
@@ -19,6 +20,7 @@ pub fn get_all_routes() -> Vec<(&'static str, Vec<Route>)> {
             list::get_server_schemas,
             update_schema::update_schema,
             validate::validate_schema,
+            validate_game_config::validate_game_config
         ],
     )]
 }

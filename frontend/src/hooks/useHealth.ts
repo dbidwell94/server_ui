@@ -1,53 +1,45 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "../lib/api";
+import { result } from "@dbidwell94/ts-utils";
 
 interface HealthData {
+  status: "healthy" | "unhealthy";
+  errors: string[];
+}
+
+interface HealthResponse {
   status: "healthy" | "unhealthy" | "loading" | "error";
   errors: string[];
   lastUpdated: Date | null;
 }
 
-export function useHealth() {
-  const [health, setHealth] = useState<HealthData>({
-    status: "loading",
-    errors: [],
-    lastUpdated: null,
+export function useHealth(): HealthResponse {
+  const { data } = useQuery<HealthResponse>({
+    queryKey: ["health"],
+    queryFn: async () => {
+      const response = await result.fromPromise(
+        apiClient.get<HealthData>("/health"),
+      );
+
+      if (response.isError()) {
+        return {
+          status: "error",
+          errors: ["Failed to fetch health data."],
+          lastUpdated: null,
+        };
+      } else {
+        return { ...response.value.data, lastUpdated: new Date() };
+      }
+    },
+    refetchInterval: 10_000, // 10 seconds
+    initialData: {
+      status: "loading",
+      errors: [],
+      lastUpdated: null,
+    },
+    initialDataUpdatedAt: 0,
+    retry: false,
   });
 
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const response = await axios.get("/api/health");
-        const isHealthy = response.data.status === "healthy";
-
-        setHealth({
-          status: isHealthy ? "healthy" : "unhealthy",
-          errors: response.data.errors || [],
-          lastUpdated: new Date(),
-        });
-      } catch (error) {
-        setHealth({
-          status: "error",
-          errors: [
-            axios.isAxiosError(error)
-              ? error.response?.status
-                ? `HTTP ${error.response.status}`
-                : error.message
-              : "Unknown error",
-          ],
-          lastUpdated: new Date(),
-        });
-      }
-    };
-
-    // Initial check
-    checkHealth();
-
-    // Set up interval to check every 10 seconds
-    const interval = setInterval(checkHealth, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return health;
+  return data;
 }

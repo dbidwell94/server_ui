@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -15,14 +16,19 @@ import type {
   ConditionalRule,
   FieldConstraint,
   Condition,
+  GameConfig,
 } from "../bindings";
-import { getAllSchemas, getSchemaById } from "../lib/gameSchemaApi";
+import {
+  getAllSchemas,
+  getSchemaById,
+  validateGameConfig,
+} from "../lib/gameSchemaApi";
 
 // Helper function to evaluate a condition against form values
 function evaluateCondition(
   condition: Condition,
   formValues: Record<string, any>,
-  allFields: DynamicField[]
+  allFields: DynamicField[],
 ): boolean {
   const fieldValue = formValues[condition.fieldName];
   const field = allFields.find((f) => f.name === condition.fieldName);
@@ -68,7 +74,7 @@ function getApplicableConstraints(
   fieldName: string,
   formValues: Record<string, any>,
   rules: ConditionalRule[],
-  allFields: DynamicField[]
+  allFields: DynamicField[],
 ): FieldConstraint[] {
   const constraints: FieldConstraint[] = [];
 
@@ -77,7 +83,7 @@ function getApplicableConstraints(
       const conditionMet = evaluateCondition(
         rule.condition,
         formValues,
-        allFields
+        allFields,
       );
       if (conditionMet) {
         constraints.push(rule.constraint);
@@ -89,19 +95,21 @@ function getApplicableConstraints(
 }
 
 export default function RunGame() {
+  const navigate = useNavigate();
   const [schemas, setSchemas] = useState<SchemaMetadata[]>([]);
   const [isLoadingSchemas, setIsLoadingSchemas] = useState(true);
   const [schemasError, setSchemasError] = useState<string | null>(null);
 
   const [selectedSchemaId, setSelectedSchemaId] = useState<number | null>(null);
   const [selectedSchema, setSelectedSchema] = useState<ServerConfig | null>(
-    null
+    null,
   );
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [schemaError, setSchemaError] = useState<string | null>(null);
 
-  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [formValues, setFormValues] = useState<GameConfig["config"]>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Load all schemas on mount
   useEffect(() => {
@@ -162,15 +170,27 @@ export default function RunGame() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      // TODO: Implement server session creation logic
-      console.log("Form submitted with values:", formValues);
-      console.log("Selected schema:", selectedSchema);
-      // This is a placeholder - actual server creation logic will be added later
+      if (!selectedSchemaId) {
+        throw new Error("No schema selected");
+      }
+
+      // Validate the game config before proceeding
+      await validateGameConfig(selectedSchemaId, formValues);
+
+      // TODO: Save game config to database and get server ID back
+      // TODO: Redirect to dashboard with the newly created server selected
+      console.log("Server config validated successfully:", formValues);
+
+      // Temporary: Navigate to dashboard after successful validation
+      // This will be updated once we have the server creation endpoint
+      navigate("/");
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to create session";
+        err instanceof Error ? err.message : "Failed to create server";
+      setSubmitError(errorMessage);
       console.error("Error:", errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -186,7 +206,7 @@ export default function RunGame() {
       field.name,
       formValues,
       selectedSchema.rules,
-      selectedSchema.args
+      selectedSchema.args,
     );
 
     // Check for restrictenum constraint
@@ -254,7 +274,7 @@ export default function RunGame() {
         let availableValues = enumField.values || [];
         if (restrictedValues) {
           availableValues = availableValues.filter((v) =>
-            restrictedValues!.includes(v)
+            restrictedValues!.includes(v),
           );
         }
 
@@ -387,6 +407,8 @@ export default function RunGame() {
 
           {selectedSchema && !isLoadingSchema && (
             <form onSubmit={handleSubmit} className="space-y-8">
+              {submitError && <ErrorMessage message={submitError} />}
+
               {selectedSchema.args.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -403,7 +425,7 @@ export default function RunGame() {
                       maxWidth={false}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Starting..." : "Start Server"}
+                      {isSubmitting ? "Creating..." : "Create Server"}
                     </Button>
                   </div>
                 </>
@@ -419,4 +441,3 @@ export default function RunGame() {
     </PageLayout>
   );
 }
-
