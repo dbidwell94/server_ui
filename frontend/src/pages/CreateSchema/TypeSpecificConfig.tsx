@@ -111,7 +111,7 @@ export default function TypeSpecificConfig({
           {enumField.values && enumField.values.length > 0 ? (
             enumField.values.map((value: string, idx: number) => (
               <div
-                key={`${value}-${idx}`}
+                key={idx}
                 className="space-y-2 p-3 bg-slate-800 rounded border border-slate-600"
               >
                 <div className="flex gap-2">

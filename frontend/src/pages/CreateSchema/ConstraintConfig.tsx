@@ -48,31 +48,6 @@ export default function ConstraintConfig({
                       } as FieldConstraint);
                     }}
                   />
-                  {restrictEnum.values.includes(value) && (
-                    <TextInput
-                      id={`display-name-${value}`}
-                      name={`display-name-${value}`}
-                      label="Display Name"
-                      value={displayNames[value] || ""}
-                      placeholder={`Default: ${value}`}
-                      onChange={(e) => {
-                        const newDisplayNames = { ...displayNames };
-                        if (e.target.value) {
-                          newDisplayNames[value] = e.target.value;
-                        } else {
-                          delete newDisplayNames[value];
-                        }
-                        onChange({
-                          type: "restrictenum",
-                          values: restrictEnum.values,
-                          displayNames:
-                            Object.keys(newDisplayNames).length > 0
-                              ? newDisplayNames
-                              : undefined,
-                        } as FieldConstraint);
-                      }}
-                    />
-                  )}
                 </div>
               ))
             ) : (
