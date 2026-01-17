@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useHealth } from "../hooks/useHealth";
 import { useAuth } from "../contexts/AuthContext";
-import api from "../lib/api";
+import api, { apiClient } from "../lib/api";
 import UserDropdown from "./UserDropdown";
+import { result } from "@dbidwell94/ts-utils";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,10 +29,9 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    try {
-      await api.post("/user/logout");
-    } catch (error) {
-      console.error("Logout request failed:", error);
+    const res = await result.fromPromise(apiClient.post("/user/logout"));
+    if (res.isError()) {
+      console.error("Logout request failed:", res.error);
     }
     logout();
     setIsDropdownOpen(false);

@@ -23,6 +23,7 @@ import {
   getSchemaById,
   validateGameConfig,
 } from "../lib/gameSchemaApi";
+import { option, result } from "@dbidwell94/ts-utils";
 
 // Helper function to evaluate a condition against form values
 function evaluateCondition(
@@ -138,26 +139,21 @@ export default function RunGame() {
     setSelectedSchema(null);
     setFormValues({});
     setSchemaError(null);
+    setIsLoadingSchema(true);
 
-    try {
-      setIsLoadingSchema(true);
-      const schema = await getSchemaById(schemaId);
-      setSelectedSchema(schema);
+    const res = await result.fromPromise(getSchemaById(schemaId));
 
-      // Initialize form values with defaults
+    if (res.isOk()) {
+      const schema = res.value;
       const initialValues: Record<string, any> = {};
       schema.args.forEach((field) => {
         initialValues[field.name] = field.default || "";
       });
       setFormValues(initialValues);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load schema";
-      setSchemaError(errorMessage);
-      console.error("Error loading schema:", err);
-    } finally {
-      setIsLoadingSchema(false);
+    } else {
+      setSchemaError(res.error.message);
     }
+    setIsLoadingSchema(false);
   };
 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -172,29 +168,21 @@ export default function RunGame() {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    try {
-      if (!selectedSchemaId) {
-        throw new Error("No schema selected");
-      }
+    const validationResult = await result.fromPromise(
+      option
+        .unknown(selectedSchemaId)
+        .okOr("No schema selected")
+        .mapOk((schemaId) => validateGameConfig(schemaId, formValues)),
+    );
 
-      // Validate the game config before proceeding
-      await validateGameConfig(selectedSchemaId, formValues);
-
-      // TODO: Save game config to database and get server ID back
-      // TODO: Redirect to dashboard with the newly created server selected
-      console.log("Server config validated successfully:", formValues);
-
-      // Temporary: Navigate to dashboard after successful validation
-      // This will be updated once we have the server creation endpoint
+    if (validationResult.isError()) {
+      setSubmitError(validationResult.error.message);
+    } else {
+      console.log("Validation succeeded");
+      // TODO: Proceed with server creation once API is available
       navigate("/");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create server";
-      setSubmitError(errorMessage);
-      console.error("Error:", errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   };
 
   const renderField = (field: DynamicField) => {
