@@ -1,4 +1,5 @@
 import axios from "axios";
+import { result } from "@dbidwell94/ts-utils";
 
 // Create axios instance with default config
 export const apiClient = axios.create({
@@ -42,53 +43,49 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't already tried to refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // If we don't have an access token, don't bother trying to refresh
-      if (!getAccessToken()) {
-        return Promise.reject(error);
-      }
-
-      // If already refreshing, queue this request
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          addRefreshSubscriber((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(apiClient(originalRequest));
-          });
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Call refresh endpoint (cookies sent automatically via withCredentials)
-        const response = await axios.post(
-          "/api/user/refresh",
-          {},
-          { withCredentials: true }
-        );
-
-        const newAccessToken = response.data.accessToken;
-        setAccessToken(newAccessToken);
-
-        // Retry original request with new token
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        onRefreshed(newAccessToken);
-
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        // Refresh failed - user needs to log in again
-        setAccessToken(null);
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    // Guard: Not a 401 or already retried
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
-  }
+    // Guard: No access token to refresh with
+    if (!getAccessToken()) {
+      return Promise.reject(error);
+    }
+
+    // Guard: Already refreshing - queue this request
+    if (isRefreshing) {
+      return new Promise((resolve) => {
+        addRefreshSubscriber((token: string) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          resolve(apiClient(originalRequest));
+        });
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    const refreshResult = await result.fromPromise(
+      axios.post("/api/user/refresh", {}, { withCredentials: true }),
+    );
+
+    try {
+      const newAccessToken = refreshResult.unwrap().data.accessToken;
+      setAccessToken(newAccessToken);
+
+      // Retry original request with new token
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      onRefreshed(newAccessToken);
+
+      return apiClient(originalRequest);
+    } catch (err) {
+      setAccessToken(null);
+      throw err;
+    } finally {
+      isRefreshing = false;
+    }
+  },
 );
 
 export default apiClient;

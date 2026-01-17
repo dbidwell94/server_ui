@@ -10,6 +10,8 @@ import ErrorMessage from "../components/ErrorMessage";
 import { onboardingSchema } from "../schemas/onboarding";
 import { useHasAdminQuery } from "../hooks/useHasAdminQuery";
 import PageLayout from "../components/PageLayout";
+import { result } from "@dbidwell94/ts-utils";
+import { ValidationError } from "yup";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function Onboarding() {
   }, [adminData?.hasAdmin, navigate]);
 
   const handleInputChange = async (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     const updatedData = {
@@ -42,22 +44,20 @@ export default function Onboarding() {
     };
     setFormData(updatedData);
 
-    // Validate the specific field onChange
-    try {
-      await onboardingSchema.validateAt(name, updatedData);
-      // Clear error for this field if validation passes
+    const res = await result.fromPromise(
+      onboardingSchema.validateAt(name, updatedData),
+    );
+
+    if (res.isError()) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: res.error.message,
+      }));
+    } else {
       setErrors((prev) => ({
         ...prev,
         [name]: "",
       }));
-    } catch (err) {
-      // Set error for this field if validation fails
-      if (err instanceof Error && "message" in err) {
-        setErrors((prev) => ({
-          ...prev,
-          [name]: err.message,
-        }));
-      }
     }
   };
 
@@ -66,17 +66,19 @@ export default function Onboarding() {
     setServerError(null);
     setErrors({});
 
-    try {
-      // Validate form data with yup
-      await onboardingSchema.validate(formData, { abortEarly: false });
-    } catch (err) {
+    const validationResult = await result.fromPromise(
+      onboardingSchema.validate(formData, { abortEarly: false }),
+    );
+
+    if (validationResult.isError()) {
       // Handle validation errors
-      if (err instanceof Error && "inner" in err) {
+      const err = validationResult.error;
+      if (err instanceof ValidationError) {
         const validationErrors: Record<string, string> = {};
         (err.inner as Array<{ path: string; message: string }>).forEach(
           (error) => {
             validationErrors[error.path] = error.message;
-          }
+          },
         );
         setErrors(validationErrors);
       }
@@ -85,38 +87,45 @@ export default function Onboarding() {
 
     setIsLoading(true);
 
-    try {
-      // Create the user
-      await apiClient.post("/user/create", {
+    const createResult = await result.fromPromise(
+      apiClient.post("/user/create", {
         username: formData.username,
         password: formData.password,
-      });
+      }),
+    );
 
-      // Auto-login with the credentials
-      const loginResponse = await apiClient.post("/user/login", {
-        username: formData.username,
-        password: formData.password,
-      });
-
-      const { user, accessToken } = loginResponse.data;
-      setTokens(user, accessToken);
-
-      // Invalidate the has_admin query to trigger a refetch
-      await queryClient.invalidateQueries({ queryKey: ["admin", "has_admin"] });
-
-      // Navigate directly to home (authenticated route)
-      navigate("/home", { replace: true });
-    } catch (err) {
+    if (createResult.isError()) {
       const errorMessage =
-        err instanceof Error && "response" in err
-          ? (err as any).response?.data?.message ||
-            `Error: ${(err as any).response?.status}`
-          : "Failed to create admin user";
-
+        (createResult.error as any).response?.data?.message ||
+        `Error: ${(createResult.error as any).response?.status}` ||
+        "Failed to create admin user";
       setServerError(errorMessage);
-    } finally {
       setIsLoading(false);
+      return;
     }
+
+    // Auto-login with the credentials
+    const loginResult = await result.fromPromise(
+      apiClient.post("/user/login", {
+        username: formData.username,
+        password: formData.password,
+      }),
+    );
+
+    if (loginResult.isError()) {
+      setServerError("Failed to log in after creating account");
+      setIsLoading(false);
+      return;
+    }
+
+    const { user, accessToken } = loginResult.value.data;
+    setTokens(user, accessToken);
+
+    // Invalidate the has_admin query to trigger a refetch
+    await queryClient.invalidateQueries({ queryKey: ["admin", "has_admin"] });
+
+    // Navigate directly to home (authenticated route)
+    navigate("/home", { replace: true });
   };
 
   return (

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useHealth } from "../hooks/useHealth";
 import { useAuth } from "../contexts/AuthContext";
-import api, { apiClient } from "../lib/api";
+import apiClient from "../lib/api";
 import UserDropdown from "./UserDropdown";
 import { result } from "@dbidwell94/ts-utils";
 

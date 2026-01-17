@@ -7,6 +7,7 @@ import FormCard from "../components/FormCard";
 import TextInput from "../components/TextInput";
 import Button from "../components/Button";
 import ErrorMessage from "../components/ErrorMessage";
+import { result } from "@dbidwell94/ts-utils";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -48,25 +49,24 @@ export default function Login() {
 
     setIsLoading(true);
 
-    try {
-      const response = await apiClient.post("/user/login", {
+    const loginResult = await result.fromPromise(
+      apiClient.post("/user/login", {
         username: formData.username,
         password: formData.password,
-      });
+      }),
+    );
 
-      const { user, accessToken } = response.data;
+    if (loginResult.isOk()) {
+      const { user, accessToken } = loginResult.value.data;
       setTokens(user, accessToken);
       navigate("/");
-    } catch (err) {
+    } else {
       const errorMessage =
-        err instanceof Error && "response" in err
-          ? (err as any).response?.data?.message || "Invalid credentials"
-          : "Login failed";
-
+        (loginResult.error as any).response?.data?.message || "Login failed";
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   return (

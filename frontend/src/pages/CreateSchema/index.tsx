@@ -76,7 +76,7 @@ export default function CreateSchema() {
 
   const handleStaticChange = (
     key: keyof Omit<ServerConfig, "args">,
-    value: any
+    value: any,
   ) => {
     setConfig((prev) => ({
       ...prev,
@@ -208,13 +208,8 @@ export default function CreateSchema() {
       // Save to server (create or update)
       if (currentEditingSchemaId) {
         await updateSchema(currentEditingSchemaId, fullConfig);
-        console.log(
-          "Schema updated successfully with ID:",
-          currentEditingSchemaId
-        );
       } else {
-        const result = await saveSchema(fullConfig);
-        console.log("Schema saved successfully with ID:", result.id);
+        await saveSchema(fullConfig);
       }
 
       setSaveSuccess(true);
@@ -364,7 +359,7 @@ export default function CreateSchema() {
         existingRules={
           editingIndex !== null
             ? config.rules.filter(
-                (r) => r.targetFieldName === fields[editingIndex].name
+                (r) => r.targetFieldName === fields[editingIndex].name,
               )
             : []
         }

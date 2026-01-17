@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import axios from "axios";
 import apiClient, { setAccessToken } from "../lib/api";
 import type { Minimum as User } from "../bindings";
+import { result } from "@dbidwell94/ts-utils";
 
 export type { User };
 
@@ -24,38 +31,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Validate auth on mount by calling whoami
   useEffect(() => {
-    const validateAuth = async () => {
-      try {
-        const response = await apiClient.get<User>("/user/whoami");
-        const userData = response.data;
-        setUser(userData);
-        setAccessTokenState("cached"); // Just indicate we have a token
-      } catch (error) {
-        // Only try to refresh if we get a 401 (unauthorized)
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          try {
-            const refreshResponse = await apiClient.post("/user/refresh", {});
-            const newAccessToken = refreshResponse.data.accessToken;
-            setAccessToken(newAccessToken);
-            setAccessTokenState(newAccessToken);
+    const clearAuth = () => {
+      setUser(null);
+      setAccessTokenState(null);
+      setAccessToken(null);
+    };
 
-            // Now try whoami again with the new token
-            const whoamiResponse = await apiClient.get<User>("/user/whoami");
-            setUser(whoamiResponse.data);
-          } catch (refreshError) {
-            setUser(null);
-            setAccessTokenState(null);
-            setAccessToken(null);
-          }
-        } else {
-          // For other errors, just stay unauthenticated
-          setUser(null);
-          setAccessTokenState(null);
-          setAccessToken(null);
-        }
-      } finally {
+    const validateAuth = async () => {
+      const whoamiResult = await result.fromPromise(
+        apiClient.get<User>("/user/whoami"),
+      );
+
+      if (whoamiResult.isOk()) {
+        setUser(whoamiResult.value.data);
+        setAccessTokenState("cached"); // Just indicate we have a token
         setIsLoading(false);
+        return;
       }
+
+      // Guard: Only try to refresh if we get a 401 (unauthorized)
+      const isUnauthorized =
+        axios.isAxiosError(whoamiResult.error) &&
+        whoamiResult.error.response?.status === 401;
+
+      if (!isUnauthorized) {
+        // For other errors, just stay unauthenticated
+        clearAuth();
+        setIsLoading(false);
+        return;
+      }
+
+      const refreshResult = await result.fromPromise(
+        apiClient.post("/user/refresh", {}),
+      );
+
+      if (refreshResult.isError()) {
+        clearAuth();
+        setIsLoading(false);
+        return;
+      }
+
+      const newAccessToken = refreshResult.value.data.accessToken;
+      setAccessToken(newAccessToken);
+      setAccessTokenState(newAccessToken);
+
+      // Now try whoami again with the new token
+      const retryResult = await result.fromPromise(
+        apiClient.get<User>("/user/whoami"),
+      );
+
+      if (retryResult.isOk()) {
+        setUser(retryResult.value.data);
+      } else {
+        clearAuth();
+      }
+
+      setIsLoading(false);
     };
 
     validateAuth();

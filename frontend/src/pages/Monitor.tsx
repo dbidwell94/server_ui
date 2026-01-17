@@ -9,7 +9,7 @@ export default function Monitor() {
   const [selectedServer, setSelectedServer] = useState<string>("all");
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const logIdRef = useRef(0);
-  const {accessToken} = useAuth();
+  const { accessToken } = useAuth();
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
@@ -18,22 +18,20 @@ export default function Monitor() {
 
   // Connect to server-sent events for logs
   useEffect(() => {
-    const evtSource = new EventSource(`/api/steamcmd/stdout?token=${accessToken}`);
+    const evtSource = new EventSource(
+      `/api/steamcmd/stdout?token=${accessToken}`,
+    );
 
-    evtSource.onmessage = (evt) => {
-      try {
-        const message = evt.data;
-        const newLog: LogEntry = {
-          id: logIdRef.current++,
-          timestamp: new Date().toISOString(),
-          source: "steamcmd",
-          level: "info",
-          message: message,
-        };
-        setLogs((prev) => [...prev, newLog].slice(-1000)); // Keep last 1000 logs
-      } catch (error) {
-        console.error("Failed to parse log entry:", error);
-      }
+    evtSource.onmessage = (evt: MessageEvent<string>) => {
+      const message = evt.data;
+      const newLog: LogEntry = {
+        id: logIdRef.current++,
+        timestamp: new Date().toISOString(),
+        source: "steamcmd",
+        level: "info",
+        message: message,
+      };
+      setLogs((prev) => [...prev, newLog].slice(-1000)); // Keep last 1000 logs
     };
 
     evtSource.onerror = () => {
@@ -48,7 +46,8 @@ export default function Monitor() {
 
   // Filter logs based on selected server and level
   const filteredLogs = logs.filter((log) => {
-    const serverMatch = selectedServer === "all" || log.source === selectedServer;
+    const serverMatch =
+      selectedServer === "all" || log.source === selectedServer;
     const levelMatch = selectedLevel === "all" || log.level === selectedLevel;
     return serverMatch && levelMatch;
   });
@@ -57,7 +56,7 @@ export default function Monitor() {
   const servers = Array.from(new Set(logs.map((log) => log.source)));
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
+    <div className="flex flex-col min-h-screen bg-linear-to-br from-gray-900 via-slate-800 to-gray-900">
       <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
@@ -70,7 +69,10 @@ export default function Monitor() {
         <div className="bg-slate-800 rounded-lg shadow p-6 mb-8 border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="server" className="block text-sm font-medium text-gray-300 mb-2">
+              <label
+                htmlFor="server"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
                 Server
               </label>
               <select
@@ -89,7 +91,10 @@ export default function Monitor() {
             </div>
 
             <div>
-              <label htmlFor="level" className="block text-sm font-medium text-gray-300 mb-2">
+              <label
+                htmlFor="level"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
                 Log Level
               </label>
               <select
@@ -120,7 +125,11 @@ export default function Monitor() {
         <TerminalView
           logs={filteredLogs}
           isEmpty={filteredLogs.length === 0}
-          emptyMessage={logs.length === 0 ? "Waiting for logs..." : "No logs match the selected filters"}
+          emptyMessage={
+            logs.length === 0
+              ? "Waiting for logs..."
+              : "No logs match the selected filters"
+          }
           title="steamcmd"
         />
       </div>
