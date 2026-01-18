@@ -150,6 +150,7 @@ export default function RunGame() {
         initialValues[field.name] = field.default || "";
       });
       setFormValues(initialValues);
+      setSelectedSchema(res.value);
     } else {
       setSchemaError(res.error.message);
     }
