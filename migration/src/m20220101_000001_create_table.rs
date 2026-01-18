@@ -1,8 +1,4 @@
-use sea_orm_migration::{
-    prelude::*,
-    schema::*,
-    sea_orm::{DeriveActiveEnum, EnumIter, Iterable},
-};
+use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -18,20 +14,29 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(User::Id))
                     .col(string(User::Name).unique_key().not_null())
                     .col(string(User::PasswordHash).not_null())
-                    .col(
-                        integer(User::Role)
-                            .not_null()
-                            .check(Expr::tuple(UserRole::iter().map(|e| Expr::value(e)))),
-                    )
+                    .col(boolean(User::Active).not_null().default(true))
+                    .col(integer(User::Role).not_null())
                     .col(
                         timestamp(User::CreatedAt)
                             .not_null()
                             .default(Expr::current_timestamp()),
                     )
+                    .col(integer_null(User::CreatedBy))
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(User::Table, User::CreatedBy)
+                            .to(User::Table, User::Id),
+                    )
                     .col(
                         timestamp(User::UpdatedAt)
                             .not_null()
                             .default(Expr::current_timestamp()),
+                    )
+                    .col(integer_null(User::UpdatedBy))
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(User::Table, User::UpdatedBy)
+                            .to(User::Table, User::Id),
                     )
                     .to_owned(),
             )
@@ -45,20 +50,16 @@ impl MigrationTrait for Migration {
     }
 }
 
-#[derive(EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "i32", db_type = "Integer")]
-pub enum UserRole {
-    Admin = 1,
-    Moderator = 2,
-}
-
 #[derive(DeriveIden)]
-enum User {
+pub enum User {
     Table,
     Id,
     Name,
     PasswordHash,
     Role,
+    Active,
+    CreatedBy,
     CreatedAt,
+    UpdatedBy,
     UpdatedAt,
 }

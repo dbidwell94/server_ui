@@ -1,5 +1,7 @@
+use crate::auth;
 use crate::dto;
 use crate::entity;
+use crate::models::user::UserRole;
 use crate::utils::error_response;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use rocket::{
@@ -8,6 +10,7 @@ use rocket::{
     response::Responder,
 };
 use sea_orm::prelude::*;
+use sea_orm::ActiveValue::Set;
 use sea_orm::QuerySelect;
 use thiserror::Error;
 
@@ -28,7 +31,7 @@ pub enum UserError {
     #[error("Invalid credentials")]
     InvalidCredentials,
 
-    #[error("A database error occurred. Please review the logs for more details.")]
+    #[error("A database error occurred. Please review the logs for more details. .. {0}")]
     DbError(#[from] sea_orm::DbErr),
 }
 
@@ -47,6 +50,7 @@ impl<'r> Responder<'r, 'static> for UserError {
 
 pub struct User {
     db: DatabaseConnection,
+    auth_session: Option<auth::guards::AccessTokenGuard>,
 }
 
 #[rocket::async_trait]
@@ -54,8 +58,15 @@ impl<'r> FromRequest<'r> for User {
     type Error = UserError;
 
     async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+        let auth_session = auth::guards::AccessTokenGuard::from_request(request)
+            .await
+            .succeeded();
+
         match request.rocket().state::<DatabaseConnection>() {
-            Some(db) => Outcome::Success(User { db: db.clone() }),
+            Some(db) => Outcome::Success(User {
+                db: db.clone(),
+                auth_session,
+            }),
             None => Outcome::Error((
                 rocket::http::Status::InternalServerError,
                 UserError::DbNotFound,
@@ -65,10 +76,19 @@ impl<'r> FromRequest<'r> for User {
 }
 
 impl User {
-    pub async fn new_user(&self, new_user: crate::dto::user::New) -> Result<i32, UserError> {
-        let active_model = new_user
+    pub async fn new_user_with_role(
+        &self,
+        new_user: crate::dto::user::NewWithRole,
+    ) -> Result<i32, UserError> {
+        let auth_user_id = self.auth_session.as_ref().map(|a| a.user_id);
+        let mut active_model = new_user
             .to_active_model()
             .map_err(|_| UserError::HashError)?;
+
+        active_model.created_by = Set(auth_user_id);
+        active_model.updated_by = Set(auth_user_id);
+
+        println!("Creating user: {:#?}", active_model);
 
         let res = active_model.insert(&self.db).await?;
 
@@ -104,12 +124,11 @@ impl User {
     }
 
     pub async fn has_admin(&self) -> Result<bool, UserError> {
-        let has_user = entity::user::Entity::find()
+        let admin_count = entity::user::Entity::find()
+            .filter(entity::user::Column::Role.eq(UserRole::Admin as i32))
             .limit(1)
-            .all(&self.db)
-            .await?
-            .len()
-            > 0;
-        Ok(has_user)
+            .count(&self.db)
+            .await?;
+        Ok(admin_count > 0)
     }
 }

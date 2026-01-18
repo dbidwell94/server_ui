@@ -1,4 +1,4 @@
-use crate::m20260116_203718_game_schema::GameSchema;
+use crate::{m20220101_000001_create_table::User, m20260116_203718_game_schema::GameSchema};
 use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
@@ -25,10 +25,22 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .default(Expr::current_timestamp()),
                     )
+                    .col(integer(GameConfig::CreatedBy).not_null())
                     .col(
                         timestamp(GameConfig::UpdatedAt)
                             .not_null()
                             .default(Expr::current_timestamp()),
+                    )
+                    .col(integer(GameConfig::UpdatedBy).not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(GameConfig::Table, GameConfig::CreatedBy)
+                            .to(User::Table, User::Id),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(GameConfig::Table, GameConfig::UpdatedBy)
+                            .to(User::Table, User::Id),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -73,4 +85,6 @@ enum GameConfig {
     ConfigJson,
     CreatedAt,
     UpdatedAt,
+    CreatedBy,
+    UpdatedBy,
 }

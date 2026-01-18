@@ -1,7 +1,7 @@
+use crate::{auth, entity::user::Model as UserModel};
 use sea_orm::{FromQueryResult, TryGetable};
 use serde::{Deserialize, Serialize};
-
-use crate::{auth, entity::user::Model as UserModel};
+use ts_rs::TS;
 
 #[derive(FromQueryResult, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -30,8 +30,9 @@ impl TryFrom<UserModel> for User {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, TS)]
 #[serde(rename_all = "lowercase")]
+#[ts(export)]
 pub enum UserRole {
     Admin = 1,
     Moderator = 2,

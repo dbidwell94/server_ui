@@ -15,6 +15,7 @@ pub fn get_all_routes() -> Vec<(&'static str, Vec<Route>)> {
         routes![
             has_admin::has_admin,
             create::create_user,
+            create::onboarding,
             login::login,
             login::refresh_token,
             whoami::whoami,

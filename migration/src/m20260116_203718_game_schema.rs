@@ -1,5 +1,7 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+use crate::m20220101_000001_create_table::User;
+
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
@@ -20,6 +22,28 @@ impl MigrationTrait for Migration {
                             .unique()
                             .col(GameSchema::Name)
                             .col(GameSchema::SteamAppId),
+                    )
+                    .col(
+                        timestamp(GameSchema::CreatedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp(GameSchema::UpdatedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(integer(GameSchema::CreatedBy).not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(GameSchema::Table, GameSchema::CreatedBy)
+                            .to(User::Table, User::Id),
+                    )
+                    .col(integer(GameSchema::UpdatedBy).not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(GameSchema::Table, GameSchema::UpdatedBy)
+                            .to(User::Table, User::Id),
                     )
                     .to_owned(),
             )
@@ -46,4 +70,8 @@ pub enum GameSchema {
     SchemaVersion,
     SteamAppId,
     SchemaJson,
+    CreatedAt,
+    UpdatedAt,
+    CreatedBy,
+    UpdatedBy,
 }

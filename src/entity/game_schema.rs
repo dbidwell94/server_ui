@@ -11,12 +11,32 @@ pub struct Model {
     pub schema_version: String,
     pub steam_app_id: i32,
     pub schema_json: Json,
+    pub created_at: DateTimeUtc,
+    pub updated_at: DateTimeUtc,
+    pub created_by: i32,
+    pub updated_by: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::game_config::Entity")]
     GameConfig,
+    #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::UpdatedBy",
+        to = "super::user::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    User2,
+    #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::CreatedBy",
+        to = "super::user::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    User1,
 }
 
 impl Related<super::game_config::Entity> for Entity {

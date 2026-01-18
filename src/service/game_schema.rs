@@ -1,6 +1,6 @@
 use crate::dto::game_schema::SchemaMetadata;
-use crate::entity;
 use crate::utils::error_response;
+use crate::{auth, entity};
 use rocket::request::FromRequest;
 use rocket::{http::Status, request::Outcome, response::Responder};
 use sea_orm::prelude::*;
@@ -36,6 +36,7 @@ impl Responder<'_, 'static> for GameSchemaError {
 
 pub struct GameSchema {
     db: DatabaseConnection,
+    auth_session: Option<auth::guards::AccessTokenGuard>,
 }
 
 #[rocket::async_trait]
@@ -43,8 +44,15 @@ impl<'r> FromRequest<'r> for GameSchema {
     type Error = GameSchemaError;
 
     async fn from_request(request: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
+        let auth_session = auth::guards::AccessTokenGuard::from_request(request)
+            .await
+            .succeeded();
+
         match request.rocket().state::<DatabaseConnection>() {
-            Some(db) => Outcome::Success(GameSchema { db: db.clone() }),
+            Some(db) => Outcome::Success(GameSchema {
+                db: db.clone(),
+                auth_session,
+            }),
             None => Outcome::Error((
                 rocket::http::Status::InternalServerError,
                 GameSchemaError::DbNotFound,
@@ -67,12 +75,20 @@ impl GameSchema {
         &self,
         new_schema: crate::schema::server_config::ServerConfig,
     ) -> Result<i32, GameSchemaError> {
+        let auth_user_id = self
+            .auth_session
+            .as_ref()
+            .map(|a| Set(a.user_id))
+            .unwrap_or_default();
+
         let schema_json = serde_json::to_value(new_schema.clone())?;
         let active_model = entity::game_schema::ActiveModel {
             name: Set(new_schema.static_config.display_name),
             schema_version: Set(new_schema.static_config.schema_version),
             steam_app_id: Set(new_schema.static_config.steam_app_id.into()),
             schema_json: Set(schema_json),
+            created_by: auth_user_id.clone(),
+            updated_by: auth_user_id,
             ..Default::default()
         };
         let res = active_model
@@ -87,6 +103,13 @@ impl GameSchema {
         id: i32,
         updated_schema: crate::schema::server_config::ServerConfig,
     ) -> Result<(), GameSchemaError> {
+        let auth_user_id = self
+            .auth_session
+            .as_ref()
+            .map(|a| Set(a.user_id))
+            .unwrap_or_default();
+        let updated_at = Set(chrono::Utc::now());
+
         let schema_json = serde_json::to_value(updated_schema.clone())?;
         let active_model = entity::game_schema::ActiveModel {
             id: Set(id),
@@ -94,6 +117,8 @@ impl GameSchema {
             schema_version: Set(updated_schema.static_config.schema_version),
             steam_app_id: Set(updated_schema.static_config.steam_app_id.into()),
             schema_json: Set(schema_json),
+            updated_by: auth_user_id,
+            updated_at,
             ..Default::default()
         };
 

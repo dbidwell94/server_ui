@@ -88,7 +88,7 @@ export default function Onboarding() {
     setIsLoading(true);
 
     const createResult = await result.fromPromise(
-      apiClient.post("/user/create", {
+      apiClient.post("/user/onboarding", {
         username: formData.username,
         password: formData.password,
       }),

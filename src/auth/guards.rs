@@ -26,6 +26,9 @@ pub enum AuthError {
 
     #[error("User role is invalid")]
     InvalidRole,
+
+    #[error("Admin access required")]
+    Forbidden,
 }
 
 impl<'r> Responder<'r, 'static> for AuthError {
@@ -109,6 +112,58 @@ impl<'r> FromRequest<'r> for RefreshTokenGuard {
                 Ok(_) => Outcome::Error((Status::Unauthorized, AuthError::InvalidTokenType)),
                 Err(_) => Outcome::Error((Status::Unauthorized, AuthError::InvalidRefreshToken)),
             },
+        }
+    }
+}
+
+pub struct AdminGuard {
+    pub user_id: i32,
+    pub username: String,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AdminGuard {
+    type Error = AuthError;
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match AccessTokenGuard::from_request(request).await {
+            Outcome::Success(guard) if guard.role == UserRole::Admin => {
+                Outcome::Success(AdminGuard {
+                    user_id: guard.user_id,
+                    username: guard.username,
+                })
+            }
+            Outcome::Success(_) => Outcome::Error((Status::Forbidden, AuthError::Forbidden)),
+            Outcome::Error(e) => Outcome::Error(e),
+            Outcome::Forward(f) => Outcome::Forward(f),
+        }
+    }
+}
+
+pub struct ModeratorGuard {
+    pub user_id: i32,
+    pub username: String,
+    pub role: UserRole,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for ModeratorGuard {
+    type Error = AuthError;
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match AccessTokenGuard::from_request(request).await {
+            Outcome::Success(guard)
+                if matches!(guard.role, UserRole::Admin | UserRole::Moderator) =>
+            {
+                Outcome::Success(ModeratorGuard {
+                    user_id: guard.user_id,
+                    username: guard.username,
+                    role: guard.role,
+                })
+            }
+            Outcome::Success(_) => Outcome::Error((Status::Forbidden, AuthError::Forbidden)),
+            Outcome::Error(e) => Outcome::Error(e),
+            Outcome::Forward(f) => Outcome::Forward(f),
         }
     }
 }

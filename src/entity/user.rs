@@ -10,12 +10,32 @@ pub struct Model {
     #[sea_orm(unique)]
     pub name: String,
     pub password_hash: String,
+    pub active: bool,
     pub role: i32,
     pub created_at: DateTimeUtc,
+    pub created_by: Option<i32>,
     pub updated_at: DateTimeUtc,
+    pub updated_by: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "Entity",
+        from = "Column::UpdatedBy",
+        to = "Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    SelfRef2,
+    #[sea_orm(
+        belongs_to = "Entity",
+        from = "Column::CreatedBy",
+        to = "Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    SelfRef1,
+}
 
 impl ActiveModelBehavior for ActiveModel {}
