@@ -1,4 +1,8 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::{
+    prelude::*,
+    schema::*,
+    sea_orm::{DeriveActiveEnum, EnumIter, Iterable},
+};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -14,6 +18,11 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(User::Id))
                     .col(string(User::Name).unique_key().not_null())
                     .col(string(User::PasswordHash).not_null())
+                    .col(
+                        integer(User::Role)
+                            .not_null()
+                            .check(Expr::tuple(UserRole::iter().map(|e| Expr::value(e)))),
+                    )
                     .col(
                         timestamp(User::CreatedAt)
                             .not_null()
@@ -36,12 +45,20 @@ impl MigrationTrait for Migration {
     }
 }
 
+#[derive(EnumIter, DeriveActiveEnum)]
+#[sea_orm(rs_type = "i32", db_type = "Integer")]
+pub enum UserRole {
+    Admin = 1,
+    Moderator = 2,
+}
+
 #[derive(DeriveIden)]
 enum User {
     Table,
     Id,
     Name,
     PasswordHash,
+    Role,
     CreatedAt,
     UpdatedAt,
 }

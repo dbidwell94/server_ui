@@ -10,6 +10,7 @@ pub struct Model {
     #[sea_orm(unique)]
     pub name: String,
     pub password_hash: String,
+    pub role: i32,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }

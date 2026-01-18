@@ -18,6 +18,7 @@ import type {
 } from "../../bindings";
 import { saveSchema, updateSchema } from "../../lib/gameSchemaApi";
 import { useSchemaEditor } from "../../contexts/SchemaEditorContext";
+import { useNavigate } from "react-router-dom";
 
 const DEFAULT_CONFIG: Omit<ServerConfig, "args"> = {
   steamAppId: 0,
@@ -34,6 +35,7 @@ export default function CreateSchema() {
     editingSchemaId,
     clearSchema,
   } = useSchemaEditor();
+  const navigate = useNavigate();
   const [config, setConfig] =
     useState<Omit<ServerConfig, "args">>(DEFAULT_CONFIG);
   const [fields, setFields] = useState<DynamicField[]>([]);
@@ -210,6 +212,7 @@ export default function CreateSchema() {
         await updateSchema(currentEditingSchemaId, fullConfig);
       } else {
         await saveSchema(fullConfig);
+        navigate("/schemas");
       }
 
       setSaveSuccess(true);

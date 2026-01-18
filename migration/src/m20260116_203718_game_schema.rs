@@ -39,7 +39,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum GameSchema {
+pub enum GameSchema {
     Table,
     Id,
     Name,

@@ -93,11 +93,13 @@ impl Drop for SteamCMD {
 }
 
 impl SteamCMD {
+    /// Default capacity for the history of last lines.
+    const DEFAULT_HISTORY_CAPACITY: usize = 200;
+
     pub fn create(history_capacity: Option<usize>) -> Result<Self, SteamCmdError> {
         let path = which("steamcmd").map_err(|_| SteamCmdError::CommandNotFound)?;
-        let capacity = history_capacity.unwrap_or(200);
-
-        let (tx, _) = broadcast::channel(200);
+        let capacity = history_capacity.unwrap_or(Self::DEFAULT_HISTORY_CAPACITY);
+        let (tx, _) = broadcast::channel(capacity);
 
         Ok(Self {
             path,

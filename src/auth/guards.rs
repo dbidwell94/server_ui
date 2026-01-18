@@ -1,5 +1,6 @@
 use crate::auth::{verify_token, TokenType};
 use crate::dto;
+use crate::models::user::UserRole;
 use crate::utils::error_response;
 use rocket::{
     http::Status,
@@ -22,6 +23,9 @@ pub enum AuthError {
 
     #[error("Invalid or expired refresh token")]
     InvalidRefreshToken,
+
+    #[error("User role is invalid")]
+    InvalidRole,
 }
 
 impl<'r> Responder<'r, 'static> for AuthError {
@@ -34,6 +38,7 @@ impl<'r> Responder<'r, 'static> for AuthError {
 pub struct AccessTokenGuard {
     pub user_id: i32,
     pub username: String,
+    pub role: UserRole,
 }
 
 impl From<AccessTokenGuard> for dto::user::Minimum {
@@ -68,6 +73,7 @@ impl<'r> FromRequest<'r> for AccessTokenGuard {
                     Outcome::Success(AccessTokenGuard {
                         user_id: claims.sub,
                         username: claims.username,
+                        role: claims.role,
                     })
                 }
                 Ok(_) => Outcome::Error((Status::Unauthorized, AuthError::InvalidTokenType)),
@@ -79,6 +85,7 @@ impl<'r> FromRequest<'r> for AccessTokenGuard {
 
 pub struct RefreshTokenGuard {
     pub user_id: i32,
+    pub role: UserRole,
     pub username: String,
 }
 
@@ -95,6 +102,7 @@ impl<'r> FromRequest<'r> for RefreshTokenGuard {
                 Ok(claims) if claims.token_type == TokenType::Refresh => {
                     Outcome::Success(RefreshTokenGuard {
                         user_id: claims.sub,
+                        role: claims.role,
                         username: claims.username,
                     })
                 }

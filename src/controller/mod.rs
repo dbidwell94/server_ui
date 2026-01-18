@@ -28,6 +28,9 @@ pub enum Error {
 
     #[error(transparent)]
     GameSchema(#[from] crate::service::game_schema::GameSchemaError),
+
+    #[error(transparent)]
+    AuthError(#[from] crate::auth::guards::AuthError),
 }
 
 impl<'r> Responder<'r, 'static> for Error {
@@ -36,6 +39,7 @@ impl<'r> Responder<'r, 'static> for Error {
             Error::User(e) => e.respond_to(req),
             Error::SteamCMD(e) => e.respond_to(req),
             Error::GameSchema(e) => e.respond_to(req),
+            Error::AuthError(e) => e.respond_to(req),
         }
     }
 }

@@ -1,3 +1,4 @@
+use crate::models::user::UserRole;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -23,6 +24,7 @@ fn get_secret() -> String {
 pub struct TokenClaims {
     pub sub: i32, // user id
     pub username: String,
+    pub role: UserRole,
     pub exp: i64, // expiration time
     pub iat: i64, // issued at
     pub token_type: TokenType,
@@ -36,26 +38,28 @@ pub enum TokenType {
 }
 
 impl TokenClaims {
-    pub fn access_token(user_id: i32, username: String) -> Self {
+    pub fn access_token(user_id: i32, username: String, role: UserRole) -> Self {
         let iat = Utc::now();
         let exp = iat + Duration::minutes(15);
 
         Self {
             sub: user_id,
             username,
+            role,
             exp: exp.timestamp(),
             iat: iat.timestamp(),
             token_type: TokenType::Access,
         }
     }
 
-    pub fn refresh_token(user_id: i32, username: String) -> Self {
+    pub fn refresh_token(user_id: i32, username: String, role: UserRole) -> Self {
         let iat = Utc::now();
         let exp = iat + Duration::days(7);
 
         Self {
             sub: user_id,
             username,
+            role,
             exp: exp.timestamp(),
             iat: iat.timestamp(),
             token_type: TokenType::Refresh,
@@ -72,9 +76,10 @@ pub struct TokenPair {
 pub fn generate_tokens(
     user_id: i32,
     username: String,
+    role: UserRole,
 ) -> Result<TokenPair, jsonwebtoken::errors::Error> {
-    let access_claims = TokenClaims::access_token(user_id, username.clone());
-    let refresh_claims = TokenClaims::refresh_token(user_id, username);
+    let access_claims = TokenClaims::access_token(user_id, username.clone(), role);
+    let refresh_claims = TokenClaims::refresh_token(user_id, username, role);
 
     let secret = get_secret();
     let encoding_key = EncodingKey::from_secret(secret.as_bytes());

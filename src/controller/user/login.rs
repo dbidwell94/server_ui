@@ -1,4 +1,4 @@
-use crate::{auth, dto::user, service};
+use crate::{auth, dto::user, models::user::UserRole, service};
 use rocket::post;
 
 #[post("/login", data = "<credentials>")]
@@ -12,7 +12,9 @@ pub async fn login(
     user_service.verify_password(&credentials.password, &user_model.password_hash)?;
 
     // Generate tokens
-    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone())
+    let role = UserRole::try_from(user_model.role)
+        .map_err(|_| service::user::UserError::HashError)?;
+    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone(), role)
         .map_err(|_| service::user::UserError::HashError)?;
 
     Ok(auth::response::AuthResponse::new(
@@ -33,7 +35,7 @@ pub async fn refresh_token(
         .await
         .map_err(|_| auth::guards::AuthError::InvalidToken)?;
 
-    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone())
+    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone(), token_guard.role)
         .map_err(|_| auth::guards::AuthError::InvalidToken)?;
 
     Ok(auth::response::AuthResponse::new(

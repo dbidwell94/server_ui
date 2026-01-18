@@ -1,4 +1,4 @@
-use crate::{auth, dto::user, service};
+use crate::{auth, dto::user, models::user::UserRole, service};
 use rocket::post;
 
 #[post("/create", data = "<new_user>")]
@@ -12,7 +12,9 @@ pub async fn create_user(
     let user_model = user_service.find_by_id(created_id).await?;
 
     // Generate tokens
-    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone())
+    let role = UserRole::try_from(user_model.role)?;
+
+    let token_pair = auth::generate_tokens(user_model.id, user_model.name.clone(), role)
         .map_err(|_| service::user::UserError::HashError)?;
 
     Ok(auth::response::AuthResponse::new(
